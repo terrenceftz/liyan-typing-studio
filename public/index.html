@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>溧妍的打字练习室</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --lavender-bg: #f3f0ff;
+    --lavender-card: #ffffff;
+    --lavender-accent: #8b7cf6;
+    --lavender-dark: #5b4db1;
+    --lavender-light: #e8e5ff;
+    --text-primary: #2d2a3d;
+    --text-secondary: #6b6580;
+    --correct-color: #9ca3af;
+    --error-color: #ef4444;
+    --gold: #f59e0b;
+    --streak-bg: #fff7ed;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--lavender-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: var(--lavender-card);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(91,77,177,0.08), 0 4px 16px rgba(91,77,177,0.06);
+    transition: box-shadow 0.3s;
+  }
+  .card:hover { box-shadow: 0 2px 8px rgba(91,77,177,0.12), 0 8px 24px rgba(91,77,177,0.08); }
+  .btn-primary {
+    background: var(--lavender-accent);
+    color: #fff; border: none; padding: 10px 24px; border-radius: 10px;
+    cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:hover { background: var(--lavender-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--lavender-light); color: var(--lavender-dark);
+    border: none; padding: 8px 18px; border-radius: 8px;
+    cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: #dcd8ff; }
+  .btn-cta {
+    background: linear-gradient(135deg, #8b7cf6, #a78bfa);
+    color: #fff; border: none; padding: 16px 40px; border-radius: 16px;
+    cursor: pointer; font-size: 20px; font-weight: 700; transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(139,124,246,0.35);
+  }
+  .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(139,124,246,0.45); }
+  .btn-cta:active { transform: translateY(0); }
+  .btn-icon {
+    background: transparent; border: 2px solid var(--lavender-light); color: var(--lavender-accent);
+    width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px;
+    display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .btn-icon:hover { background: var(--lavender-light); border-color: var(--lavender-accent); }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+    background: linear-gradient(to right, var(--lavender-accent), var(--lavender-accent)) no-repeat;
+    background-size: var(--range-fill, 50%) 100%;
+    background-color: var(--lavender-light); border-radius: 3px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--lavender-accent); cursor: pointer;
+    box-shadow: 0 2px 6px rgba(91,77,177,0.3); transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  #typingInput {
+    font-size: 18px; line-height: 2; letter-spacing: 0.05em;
+    border: 2px solid var(--lavender-light); border-radius: 12px;
+    padding: 20px; width: 100%; min-height: 220px; resize: vertical;
+    outline: none; transition: border-color 0.3s; font-family: inherit; background: #fafaff;
+  }
+  #typingInput:focus { border-color: var(--lavender-accent); box-shadow: 0 0 0 3px rgba(139,124,246,0.1); }
+  #referenceDisplay {
+    font-size: 18px; line-height: 2; letter-spacing: 0.05em;
+    padding: 20px; border-radius: 12px; background: #fafaff;
+    border: 1px solid var(--lavender-light); min-height: 60px; word-break: break-all;
+  }
+  .char-correct { color: var(--correct-color); }
+  .char-error { color: var(--error-color); text-decoration: underline; text-underline-offset: 4px; }
+  .char-pending { color: #c4b5d8; }
+  .char-cursor { border-left: 2px solid var(--lavender-accent); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { border-color: transparent; } }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--lavender-dark); }
+  .stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+  .progress-bar {
+    height: 10px; border-radius: 5px; background: var(--lavender-light); overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 5px;
+    background: linear-gradient(90deg, var(--lavender-accent), #a78bfa);
+    transition: width 0.5s ease;
+  }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(45,42,61,0.5);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: #fff; border-radius: 20px; padding: 32px; max-width: 480px; width: 90%;
+    box-shadow: 0 20px 60px rgba(91,77,177,0.2); animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .achievement-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e;
+  }
+  .achievement-badge.locked {
+    background: var(--lavender-light); color: #b0a8c8; filter: grayscale(0.5);
+  }
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--streak-bg); color: #ea580c;
+    padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 14px;
+  }
+  .toast {
+    position: fixed; top: 24px; right: 24px; z-index: 200;
+    background: #fff; border-radius: 12px; padding: 16px 24px;
+    box-shadow: 0 8px 32px rgba(91,77,177,0.2);
+    display: flex; align-items: center; gap: 12px;
+    animation: slideIn 0.3s ease; font-weight: 600;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.08); }
+    70% { transform: scale(0.95); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .bounce-in { animation: bounceIn 0.5s ease; }
+
+  /* Calendar */
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+  .calendar-day {
+    aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 14px; font-weight: 500;
+    cursor: default; position: relative; transition: all 0.2s;
+  }
+  .calendar-day.practiced {
+    background: #ede9fe; color: var(--lavender-dark); font-weight: 700;
+  }
+  .calendar-day.practiced::after {
+    content: ''; position: absolute; bottom: 4px; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--lavender-accent);
+  }
+  .calendar-day.today {
+    background: var(--lavender-accent); color: #fff; font-weight: 700;
+    box-shadow: 0 2px 8px rgba(139,124,246,0.4);
+  }
+  .calendar-day.today::after { background: #fff; }
+  .calendar-day.other-month { color: #d0cce0; }
+  .calendar-header { color: var(--text-secondary); font-size: 12px; font-weight: 600; padding: 8px 0; }
+
+  /* Nav */
+  .nav-link {
+    padding: 8px 20px; border-radius: 10px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.2s; color: var(--text-secondary);
+    border: 2px solid transparent; background: transparent;
+  }
+  .nav-link:hover { background: var(--lavender-light); color: var(--lavender-dark); }
+  .nav-link.active { background: var(--lavender-accent); color: #fff; border-color: var(--lavender-accent); }
+  .nav-link.cta-link { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #fde68a; }
+  .nav-link.cta-link:hover { background: linear-gradient(135deg, #fde68a, #fcd34d); }
+
+  /* View transitions */
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* Pet */
+  .pet-container {
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    user-select: none; cursor: pointer;
+  }
+  .pet-body {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+    box-shadow: 0 4px 16px rgba(139,124,246,0.3), inset 0 -4px 8px rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; transition: transform 0.3s;
+    animation: petFloat 3s ease-in-out infinite;
+    position: relative;
+  }
+  .pet-body::before { content:''; position:absolute; top:12px; left:16px; width:14px; height:10px;
+    background:rgba(255,255,255,0.35); border-radius:50%; }
+  .pet-body:hover { transform: scale(1.1); }
+  .pet-body:active { transform: scale(0.95); }
+  .pet-body.happy { background: linear-gradient(135deg, #fde68a, #fbbf24); animation: petBounce 0.6s ease-in-out infinite; }
+  .pet-body.sad { background: linear-gradient(135deg, #d1d5db, #9ca3af); animation: petFloat 4s ease-in-out infinite; }
+  .pet-body.motivated { background: linear-gradient(135deg, #f9a8d4, #f472b6); animation: petBounce 0.8s ease-in-out infinite; }
+  .pet-body.sleepy { background: linear-gradient(135deg, #c7d2fe, #a5b4fc); animation: petFloat 5s ease-in-out infinite; }
+  .pet-body.excited { background: linear-gradient(135deg, #fbbf24, #f59e0b); animation: petBounce 0.4s ease-in-out infinite; }
+  .pet-speech {
+    background: #fff; border-radius: 14px; padding: 8px 14px; font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 200px; text-align: center;
+    margin-bottom: 6px; position: relative; color: var(--text-primary);
+    animation: speechPop 0.3s ease; display: none;
+  }
+  .pet-speech::after {
+    content:''; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent;
+    border-top:6px solid #fff;
+  }
+  .pet-speech.show { display: block; }
+  @keyframes petFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes petBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.05); }
+  }
+  @keyframes speechPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pet-sparkle {
+    position: absolute; font-size: 14px; pointer-events: none;
+    animation: sparkleUp 0.8s ease-out forwards;
+  }
+  @keyframes sparkleUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-40px) scale(0); opacity: 0; }
+  }
+
+  /* Material list */
+  .mat-list-item {
+    padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    border: 2px solid transparent; display: flex; justify-content: space-between; align-items: center;
+    gap: 8px;
+  }
+  .mat-list-item:hover { background: var(--lavender-light); }
+  .mat-list-item.selected { background: var(--lavender-light); border-color: var(--lavender-accent); }
+  .mat-list-item .mat-title { font-weight: 600; font-size: 14px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mat-list-item .mat-count { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+  /* Recent records */
+  .record-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 14px; border-radius: 10px; transition: background 0.2s;
+  }
+  .record-row:hover { background: var(--lavender-light); }
+
+  /* Exam timer */
+  .timer-warning { color: #f59e0b !important; animation: pulse 1s ease-in-out infinite; }
+  .timer-danger { color: #ef4444 !important; animation: pulse 0.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .timer-card-warn { background: #fffbeb !important; }
+  .timer-card-danger { background: #fef2f2 !important; }
+
+  @media (max-width: 768px) {
+    .calendar-day { font-size: 12px; }
+    .btn-cta { padding: 14px 28px; font-size: 17px; }
+    .pet-body { width: 64px; height: 64px; font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginOverlay" style="display:flex; position:fixed; inset:0; z-index:500;
+  background: linear-gradient(135deg, #f3f0ff 0%, #e8e5ff 50%, #ede9fe 100%);
+  align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:24px; padding:48px 40px; width:400px; max-width:90%;
+    box-shadow:0 20px 60px rgba(91,77,177,0.15); text-align:center;">
+    <div style="font-size:48px; margin-bottom:12px;">🏠</div>
+    <h1 style="font-size:24px; font-weight:700; color:#5b4db1; margin-bottom:4px;">溧妍的打字练习室</h1>
+    <p style="color:#6b6580; font-size:14px; margin-bottom:28px;">法院书记员听写模拟训练平台</p>
+    <div id="loginError" style="display:none; background:#fef2f2; color:#dc2626; padding:10px 14px;
+      border-radius:8px; margin-bottom:16px; font-size:13px;"></div>
+    <input id="loginUsername" type="text" placeholder="请输入账号" autocomplete="username"
+      style="width:100%; padding:12px 16px; border:2px solid #e8e5ff; border-radius:10px; font-size:15px;
+      outline:none; margin-bottom:12px; box-sizing:border-box; transition:border-color 0.3s;"
+      onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+    <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password"
+      style="width:100%; padding:12px 16px; border:2px solid #e8e5ff; border-radius:10px; font-size:15px;
+      outline:none; margin-bottom:20px; box-sizing:border-box; transition:border-color 0.3s;"
+      onkeydown="if(event.key==='Enter')app.login()">
+    <button onclick="app.login()" class="btn-primary" style="width:100%; justify-content:center; padding:13px; font-size:16px;">🔐 登 录</button>
+  </div>
+</div>
+
+<style>#loginUsername:focus, #loginPassword:focus { border-color: var(--lavender-accent); box-shadow: 0 0 0 3px rgba(139,124,246,0.1); }</style>
+
+<!-- App Container -->
+<div id="app" class="min-h-screen">
+  <!-- Top Navigation -->
+  <header class="card mx-4 mt-4 px-5 py-3 flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-xl font-bold" style="color:var(--lavender-dark); white-space:nowrap">🏠 溧妍打字练习</span>
+    </div>
+    <div class="flex items-center gap-1 flex-wrap">
+      <button class="nav-link active" data-view="welcome" onclick="app.navTo('welcome')">🏡 首页</button>
+      <button class="nav-link" data-view="materials" onclick="app.navTo('materials')">📝 材料</button>
+      <button class="nav-link cta-link" data-view="practice" onclick="app.navTo('practice')">⚡ 开始练习</button>
+      <button class="btn-secondary text-sm" onclick="app.logout()" style="margin-left:8px">🚪 退出</button>
+    </div>
+  </header>
+
+  <!-- ─── Welcome View ─── -->
+  <div id="view-welcome" class="view active p-4" style="max-width:960px; margin:0 auto">
+    <!-- Greeting -->
+    <div class="card px-6 py-4 mb-4 text-center">
+      <h1 class="text-xl font-bold" style="color:var(--lavender-dark)" id="welcomeName">欢迎回来 👋</h1>
+      <p class="text-sm" style="color:var(--text-secondary)">每一次练习，都是向优秀书记员迈进的一步</p>
+    </div>
+
+    <!-- Row 1: Calendar + Right panel -->
+    <div style="display:flex; gap:16px; flex-wrap:wrap">
+      <!-- Calendar (wider) -->
+      <div style="flex:1 1 420px; min-width:340px">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-bold" style="color:var(--lavender-dark)">📅 打卡日历</h2>
+            <div class="streak-badge">🔥 连续 <span id="wStreak">0</span> 天</div>
+          </div>
+          <div class="flex items-center justify-between mb-3">
+            <button class="btn-icon" onclick="app.calendarShift(-1)" style="width:28px;height:28px;font-size:12px">◀</button>
+            <span id="calTitle" class="font-bold text-sm" style="color:var(--text-primary)"></span>
+            <button class="btn-icon" onclick="app.calendarShift(1)" style="width:28px;height:28px;font-size:12px">▶</button>
+          </div>
+          <div class="calendar-grid mb-1" id="calHeader"></div>
+          <div class="calendar-grid" id="calBody"></div>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div style="flex:0 0 300px; display:flex; flex-direction:column; gap:14px">
+        <!-- Progress + Goal merged -->
+        <div class="card p-4">
+          <h2 class="text-sm font-bold mb-3" style="color:var(--lavender-dark)">🎯 今日任务</h2>
+          <div class="flex justify-between text-sm mb-1">
+            <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--lavender-dark)">0</b> 字</span>
+            <span style="color:var(--text-secondary)">目标 <b id="wGoal" style="color:var(--lavender-dark)">1000</b> 字</span>
+          </div>
+          <div class="progress-bar mb-2"><div class="progress-fill" id="wProgressBar" style="width:0%"></div></div>
+          <div class="flex justify-between items-center">
+            <span id="wPercent" class="text-sm font-bold" style="color:var(--lavender-accent)">0%</span>
+            <div class="flex gap-1">
+              <input id="goalInput" type="number" min="100" max="50000" step="100"
+                class="p-1 rounded border text-xs" style="width:80px;border-color:var(--lavender-light);outline:none"
+                placeholder="目标字数">
+              <button class="btn-secondary text-xs" onclick="app.saveGoal()" style="padding:4px 10px">设置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card p-4">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
+              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wTotalPractices">0</div>
+              <div class="text-xs" style="color:var(--text-secondary)">练习次数</div>
+            </div>
+            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
+              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wBestWPM">0</div>
+              <div class="text-xs" style="color:var(--text-secondary)">最佳 WPM</div>
+            </div>
+            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
+              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wTotalChars">0</div>
+              <div class="text-xs" style="color:var(--text-secondary)">累计字数</div>
+            </div>
+            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
+              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wAvgAccuracy">--</div>
+              <div class="text-xs" style="color:var(--text-secondary)">平均正确率</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-cta w-full" onclick="app.navTo('practice')">⚡ 开始练习</button>
+      </div>
+    </div>
+
+    <!-- Row 2: Achievements | Pet | Recent Records -->
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px">
+      <!-- Achievements -->
+      <div class="card p-4" style="flex:1 1 200px; min-width:180px">
+        <h2 class="text-sm font-bold mb-3" style="color:var(--lavender-dark)">🏅 成就勋章</h2>
+        <div id="wAchievements" class="flex flex-wrap gap-1"></div>
+      </div>
+      <!-- Pet -->
+      <div class="card p-4 text-center" style="flex:0 0 180px">
+        <h2 class="text-sm font-bold mb-2" style="color:var(--lavender-dark)">🐾 小妍陪你练</h2>
+        <div class="pet-container" onclick="app.petClick()">
+          <div class="pet-speech" id="petSpeech"></div>
+          <div class="pet-body" id="petBody">🐱</div>
+        </div>
+        <p class="text-xs mt-2" style="color:var(--text-secondary)">点击互动 💕</p>
+      </div>
+      <!-- Recent Records -->
+      <div class="card p-4" style="flex:2 1 300px; min-width:280px">
+        <h2 class="text-sm font-bold mb-3" style="color:var(--lavender-dark)">📊 最近练习</h2>
+        <div id="recentRecords">
+          <div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:16px">还没有练习记录<br>快去练习吧！</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Materials View ─── -->
+  <div id="view-materials" class="view p-4 max-w-5xl mx-auto">
+    <div class="flex gap-4 flex-wrap md:flex-nowrap">
+      <!-- Material List -->
+      <div class="card p-4 w-full md:w-[300px] flex-shrink-0">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-bold" style="color:var(--lavender-dark)">📋 材料列表</h2>
+          <button class="btn-secondary text-xs" onclick="app.matClear()">🆕 新建</button>
+        </div>
+        <div id="matList" class="flex flex-col gap-1" style="max-height:500px; overflow-y:auto">
+          <div style="color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">暂无材料，点击"新建"创建</div>
+        </div>
+      </div>
+      <!-- Editor -->
+      <div class="card p-5 flex-1">
+        <h2 class="text-base font-bold mb-3" style="color:var(--lavender-dark)" id="matEditorTitle">📝 编辑材料</h2>
+        <input id="matTitle" class="w-full p-2 rounded-lg border mb-3 text-sm" style="border-color:var(--lavender-light); outline:none" placeholder="材料标题">
+        <!-- Auto-generate -->
+        <div class="p-3 rounded-lg mb-3" style="background:var(--lavender-light)">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">🤖 自动生成</span>
+            <input id="genWordCount" type="number" min="50" max="20000" step="50" value="300"
+              class="p-1 rounded border text-xs" style="width:80px;border-color:var(--lavender-accent);outline:none;text-align:center">
+            <span class="text-xs" style="color:var(--text-secondary)">字</span>
+            <button class="btn-secondary text-xs" onclick="app.generateMaterial()" style="padding:5px 12px">✨ 生成</button>
+            <button class="btn-primary text-xs" id="saveGenBtn" onclick="app.saveGenerated()" style="display:none;padding:5px 12px">💾 保存生成材料</button>
+          </div>
+          <p class="text-xs mt-1" style="color:var(--text-secondary); margin:4px 0 0">随机生成法院相关练习材料，可设字数</p>
+        </div>
+        <textarea id="matContent" class="w-full p-3 rounded-lg border mb-3 text-sm" style="border-color:var(--lavender-light); min-height:250px; resize:vertical; outline:none" placeholder="在此粘贴考试材料内容..."></textarea>
+        <div class="flex items-center justify-between">
+          <span id="matInfo" class="text-xs" style="color:var(--text-secondary)"></span>
+          <div class="flex gap-2">
+            <button class="btn-secondary text-sm" id="matDeleteBtn" style="display:none" onclick="app.deleteMaterial()">🗑️ 删除</button>
+            <button class="btn-primary text-sm" onclick="app.saveMaterial()">💾 保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Practice View ─── -->
+  <div id="view-practice" class="view p-4 max-w-5xl mx-auto">
+    <!-- Mode Toggle + Control Bar -->
+    <div class="card px-5 py-3 mb-4">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <select id="pracMaterialSelect" class="p-2 rounded-lg border text-sm" style="border-color:var(--lavender-light); min-width:180px" onchange="app.selectPracticeMaterial(this.value)">
+            <option value="">-- 选择练习材料 --</option>
+          </select>
+          <div class="flex items-center gap-2">
+            <span class="text-xs" style="color:var(--text-secondary)">语速</span>
+            <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0"
+              oninput="app.updateSpeed(this.value)" style="width:100px; --range-fill:33%">
+            <span id="speedLabel" class="text-xs font-bold" style="color:var(--lavender-accent)">1.0x</span>
+          </div>
+          <!-- Mode Toggle -->
+          <div class="flex rounded-lg overflow-hidden" style="border:2px solid var(--lavender-light)">
+            <button id="modePracticeBtn" class="text-xs font-bold px-3 py-1.5" style="background:var(--lavender-accent);color:#fff;border:none;cursor:pointer;transition:all 0.2s" onclick="app.setMode('practice')">📝 练习模式</button>
+            <button id="modeExamBtn" class="text-xs font-bold px-3 py-1.5" style="background:transparent;color:var(--text-secondary);border:none;cursor:pointer;transition:all 0.2s" onclick="app.setMode('exam')">⏱️ 考试模式</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-1 text-xs cursor-pointer" style="color:var(--text-secondary)">
+            <input type="checkbox" id="hideRefCheck" onchange="app.toggleHideRef()">隐藏原文
+          </label>
+          <button class="btn-secondary text-sm" onclick="app.resetPractice()">🔄 重置</button>
+          <button class="btn-icon" id="playBtn" onclick="app.togglePlay()" title="空格键">▶️</button>
+        </div>
+      </div>
+      <!-- Exam Config Row -->
+      <div id="examConfig" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid var(--lavender-light); align-items:center; gap:10px; flex-wrap:wrap">
+        <span class="text-xs font-bold" style="color:#92400e">⏱️ 考试设置</span>
+        <span class="text-xs" style="color:var(--text-secondary)">时间</span>
+        <input id="examTimeInput" type="number" min="1" max="180" value="20"
+          class="p-1 rounded border text-xs text-center" style="width:56px;border-color:var(--lavender-light);outline:none">
+        <span class="text-xs" style="color:var(--text-secondary)">分钟</span>
+        <span class="text-xs" style="color:var(--text-secondary);margin-left:4px">目标</span>
+        <input id="examTargetInput" type="number" min="50" max="20000" step="50" value="2000"
+          class="p-1 rounded border text-xs text-center" style="width:72px;border-color:var(--lavender-light);outline:none">
+        <span class="text-xs" style="color:var(--text-secondary)">字</span>
+        <span class="text-xs" style="color:var(--text-secondary);margin-left:8px" id="examStatus"></span>
+      </div>
+    </div>
+
+    <!-- Reference Text -->
+    <div class="card p-4 mb-4" id="referenceCard">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-bold" style="color:var(--lavender-dark)">📖 参考文本</h2>
+        <span class="text-xs" style="color:var(--text-secondary)">已读: <span id="readCount">0</span> 字</span>
+      </div>
+      <div id="referenceDisplay" style="font-size:16px">👆 请先在上方选择练习材料，然后点击 ▶️ 开始</div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="flex gap-3 flex-wrap mb-4">
+      <div class="card px-4 py-2 flex-1 min-w-[120px] text-center">
+        <div class="stat-value text-xl" id="wpmDisplay">0</div>
+        <div class="stat-label">WPM</div>
+      </div>
+      <div class="card px-4 py-2 flex-1 min-w-[120px] text-center">
+        <div class="stat-value text-xl" id="accuracyDisplay">--</div>
+        <div class="stat-label">正确率</div>
+      </div>
+      <div class="card px-4 py-2 flex-1 min-w-[120px] text-center" id="timerCard">
+        <div class="stat-value text-xl" id="elapsedDisplay" style="transition:color 0.5s">00:00</div>
+        <div class="stat-label" id="timerLabel">用时</div>
+      </div>
+      <div class="card px-4 py-2 flex-1 min-w-[120px] text-center">
+        <div class="stat-value text-xl" id="charCountDisplay">0</div>
+        <div class="stat-label">已输入</div>
+      </div>
+    </div>
+
+    <!-- Typing Area -->
+    <div class="card p-4">
+      <textarea id="typingInput" placeholder="选择材料后，点击 ▶️ 或按空格键开始听打练习..." oninput="app.onTyping()" onpaste="app.onTyping()"></textarea>
+      <div class="flex justify-between items-center mt-2">
+        <span class="text-xs" style="color:var(--text-secondary)">
+          按 <kbd style="background:var(--lavender-light);color:var(--lavender-accent);padding:1px 5px;border-radius:3px;font-weight:700">空格</kbd> 暂停 | <kbd style="background:var(--lavender-light);color:var(--lavender-accent);padding:1px 5px;border-radius:3px;font-weight:700">Ctrl+空格</kbd> 输入时暂停
+        </span>
+        <button class="btn-primary text-sm" onclick="app.finishPractice()">🏁 结束练习</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="margin-top:32px; padding:20px 24px; text-align:center; border-top:2px solid var(--lavender-light)">
+    <p style="margin:0; font-size:13px; color:var(--text-secondary)">
+      © 2026 <b style="color:var(--lavender-dark)">溧妍的打字练习室</b> · 法院书记员听写模拟训练平台
+    </p>
+    <p style="margin:4px 0 0; font-size:11px; color:#b0a8c8">
+      知不足而奋进，望远山而前行
+    </p>
+  </footer>
+</div>
+
+<!-- Results Modal -->
+<div id="resultsModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="text-center mb-4">
+      <div id="resultsEmoji" class="text-5xl mb-3"></div>
+      <h2 class="text-2xl font-bold" style="color:var(--lavender-dark)">练习成绩单</h2>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
+        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultWPM">0</div>
+        <div class="text-xs" style="color:var(--text-secondary)">WPM</div>
+      </div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
+        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultAccuracy">0%</div>
+        <div class="text-xs" style="color:var(--text-secondary)">正确率</div>
+      </div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
+        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultChars">0</div>
+        <div class="text-xs" style="color:var(--text-secondary)">总字符数</div>
+      </div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
+        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultDuration">00:00</div>
+        <div class="text-xs" style="color:var(--text-secondary)">用时</div>
+      </div>
+    </div>
+    <div id="resultEncouragement" class="text-center text-lg font-medium mb-4 p-4 rounded-xl" style="background:var(--lavender-bg);color:var(--lavender-dark)"></div>
+    <div class="text-center text-sm mb-4" style="color:var(--text-secondary)">
+      <span>正确: <b style="color:#22c55e" id="resultCorrect">0</b></span>
+      <span class="mx-2">|</span>
+      <span>错误: <b style="color:var(--error-color)" id="resultIncorrect">0</b></span>
+    </div>
+    <div class="text-center flex gap-2 justify-center">
+      <button class="btn-primary" onclick="app.closeResults()">继续练习 💪</button>
+      <button class="btn-secondary" onclick="app.closeResults(); app.navTo('welcome')">返回首页 🏡</button>
+    </div>
+  </div>
+</div>
+
+<!-- Achievement Modal -->
+<div id="achievementModal" class="modal-overlay" style="display:none">
+  <div class="modal text-center">
+    <div class="text-6xl mb-4 bounce-in" id="achIcon"></div>
+    <h2 class="text-xl font-bold mb-2" style="color:var(--lavender-dark)">🏆 成就解锁！</h2>
+    <div class="text-2xl font-bold mb-2" style="color:var(--lavender-accent)" id="achName"></div>
+    <p class="text-sm mb-4" style="color:var(--text-secondary)" id="achDesc"></p>
+    <button class="btn-primary" onclick="app.closeAchievement()">太棒了！</button>
+  </div>
+</div>
+
+<script>
+// ─── Application ───
+const app = {
+  // Practice
+  isPlaying: false, isPracticing: false,
+  startTime: null, elapsedBeforePause: 0, pauseStart: null, timerInterval: null,
+  currentCharIndex: 0, correctChars: 0, incorrectChars: 0,
+  materials: [], activeMaterial: null,
+  settings: { speed: 1.0, dailyGoal: 1000, hideReference: false },
+  stats: { streak: 0, todayChars: 0, dailyGoal: 1000, todayPercent: 0, achievements: [] },
+  token: null,
+  currentView: 'welcome',
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth() + 1,
+  speechSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+  speechChunks: [], speechChunkIndex: 0, utterance: null, petMessage: '',
+  // Exam mode
+  practiceMode: 'practice',
+  examTimeLimit: 1200, // seconds
+  examTargetChars: 2000,
+  examTimeRemaining: 0,
+  examSubmitted: false,
+
+  // ─── Init ───
+  async init() {
+    if (!this.speechSupported) console.warn('Web Speech API not supported');
+    const token = sessionStorage.getItem('authToken');
+    if (token) {
+      this.token = token;
+      const check = await this.api('/api/auth/check');
+      if (check && check.valid) { this.showApp(); return; }
+      sessionStorage.removeItem('authToken'); this.token = null;
+    }
+    this.showLogin();
+  },
+
+  showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; },
+  showApp() {
+    document.getElementById('loginOverlay').style.display = 'none';
+    this.navTo('welcome');
+  },
+
+  // ─── Auth ───
+  async login() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    const errEl = document.getElementById('loginError');
+    if (!username || !password) { errEl.textContent = '请输入账号和密码'; errEl.style.display = 'block'; return; }
+    const result = await this.api('/api/login', { method:'POST', body: JSON.stringify({username,password}) });
+    if (!result || result.error) { errEl.textContent = result?.error || '登录失败'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    this.token = result.token;
+    sessionStorage.setItem('authToken', result.token);
+    this.showApp();
+  },
+
+  async logout() {
+    await this.api('/api/logout', { method:'POST' });
+    sessionStorage.removeItem('authToken'); this.token = null;
+    location.reload();
+  },
+
+  // ─── API ───
+  async api(url, options = {}) {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (this.token) headers['Authorization'] = 'Bearer ' + this.token;
+      const res = await fetch(url, { headers, ...options });
+      if (res.status === 401) { sessionStorage.removeItem('authToken'); this.token = null; this.showLogin(); return null; }
+      return await res.json();
+    } catch (e) { console.error('API:', e); return null; }
+  },
+
+  // ─── Navigation ───
+  navTo(view) {
+    this.currentView = view;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const el = document.getElementById('view-'+view);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(b=>{
+      b.classList.remove('active','cta-link');
+      if (b.dataset.view===view) b.classList.add(view==='practice'?'cta-link':'active');
+      if (b.dataset.view==='practice') b.classList.add('cta-link');
+    });
+    // Clear practice cta decoration on non-practice views
+    document.querySelectorAll('.nav-link[data-view="practice"]').forEach(b=>{
+      if (view!=='practice') b.classList.add('cta-link');
+    });
+    if (view==='welcome') this.loadWelcome();
+    if (view==='materials') this.loadMaterialsPage();
+    if (view==='practice') this.loadPracticePage();
+  },
+
+  // ─── Welcome Page ───
+  async loadWelcome() {
+    const stats = await this.api('/api/stats');
+    const history = await this.api('/api/history');
+    if (stats) {
+      document.getElementById('wStreak').textContent = stats.streak||0;
+      document.getElementById('wTodayChars').textContent = (stats.todayChars||0)+' 字';
+      document.getElementById('wProgressBar').style.width = (stats.todayPercent||0)+'%';
+      document.getElementById('wPercent').textContent = (stats.todayPercent||0)+'%';
+      document.getElementById('wGoal').textContent = stats.dailyGoal||1000;
+      document.getElementById('goalInput').value = stats.dailyGoal||1000;
+      this.settings.dailyGoal = stats.dailyGoal||1000;
+      const achDefs = [
+        {id:'first',name:'初试锋芒',icon:'⚔️',desc:'完成首次练习'},
+        {id:'speed',name:'快如闪电',icon:'⚡',desc:'单次速度突破 150 WPM'},
+        {id:'streak7',name:'持之以恒',icon:'🔥',desc:'连续打卡 7 天'},
+        {id:'wpm100',name:'渐入佳境',icon:'🚀',desc:'单次速度突破 100 WPM'},
+        {id:'accuracy',name:'分毫不差',icon:'🎯',desc:'正确率达到 98% 以上'},
+      ];
+      const unlocked = stats.achievements||[];
+      document.getElementById('wAchievements').innerHTML = achDefs.map(d=>{
+        const has = unlocked.find(a=>a.id===d.id);
+        return `<span class="achievement-badge ${has?'':'locked'}" title="${d.desc}">${d.icon} ${d.name}</span>`;
+      }).join('');
+      // Update pet based on stats
+      this.updatePet(stats);
+    }
+    if (history && Array.isArray(history)) {
+      document.getElementById('wTotalPractices').textContent = history.length;
+      const best = history.reduce((max,h)=>Math.max(max,h.wpm||0),0);
+      document.getElementById('wBestWPM').textContent = best;
+      const totalChars = history.reduce((sum,h)=>sum+(h.totalChars||0),0);
+      document.getElementById('wTotalChars').textContent = totalChars;
+      const avgAcc = history.length>0 ? Math.round(history.reduce((s,h)=>s+(h.accuracy||0),0)/history.length) : null;
+      document.getElementById('wAvgAccuracy').textContent = avgAcc!==null ? avgAcc+'%' : '--';
+    }
+    // Recent records
+    this.loadRecentRecords(history);
+    // Calendar
+    this.calYear = new Date().getFullYear();
+    this.calMonth = new Date().getMonth()+1;
+    this.loadCalendar();
+  },
+
+  loadRecentRecords(history) {
+    const container = document.getElementById('recentRecords');
+    if (!history || !Array.isArray(history) || history.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:16px">还没有练习记录<br>快去练习吧！</div>';
+      return;
+    }
+    const recent = [...history].reverse().slice(0, 5);
+    container.innerHTML = recent.map((r,i)=>{
+      const d=new Date(r.date);
+      const ds=`${d.getMonth()+1}/${d.getDate()}`;
+      const durM=Math.floor((r.duration||0)/60);
+      const durS=Math.floor((r.duration||0)%60);
+      const accClr=(r.accuracy||0)>=95?'#22c55e':(r.accuracy||0)>=80?'#f59e0b':'#ef4444';
+      const bg=i%2===0?'':'background:var(--lavender-bg)';
+      const isExam = r.mode==='exam';
+      const badge = isExam ? ' <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-weight:700">考</span>' : '';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;font-size:12px;${bg}">
+        <span style="color:var(--text-secondary);width:38px;white-space:nowrap">${ds}</span>
+        <span style="flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${this.esc(r.materialTitle||'')}">${this.esc(r.materialTitle||'—')}${badge}</span>
+        <span style="font-weight:700;color:var(--lavender-accent);width:36px;text-align:right">${r.wpm||0}</span>
+        <span style="font-weight:600;color:${accClr};width:36px;text-align:right">${r.accuracy||0}%</span>
+        <span style="color:var(--text-secondary);width:40px;text-align:right">${String(durM).padStart(2,'0')}:${String(durS).padStart(2,'0')}</span>
+      </div>`;
+    }).join('');
+  },
+
+  // ─── Virtual Pet ───
+  updatePet(stats) {
+    const body = document.getElementById('petBody');
+    const speech = document.getElementById('petSpeech');
+    if (!body || !speech) return;
+    body.className = 'pet-body';
+    const streak = stats.streak || 0;
+    const todayPercent = stats.todayPercent || 0;
+    const hasAchievements = (stats.achievements||[]).length > 0;
+
+    let face, state, message;
+    if (streak >= 7) {
+      face = '😻'; state = 'excited'; message = '你太厉害了！连续'+streak+'天打卡，小妍为你骄傲~';
+    } else if (todayPercent >= 100) {
+      face = '😸'; state = 'happy'; message = '今日目标完成！休息一下，明天继续加油~';
+    } else if (todayPercent > 0) {
+      face = '😺'; state = 'motivated'; message = `已达成${todayPercent}%，继续努力，很快就完成啦！`;
+    } else if (streak >= 3) {
+      face = '😼'; state = 'motivated'; message = streak+'天连续打卡！今天也要坚持练习哦~';
+    } else if (streak >= 1) {
+      face = '😺'; state = ''; message = '快来练习吧，保持住你的连续打卡记录！';
+    } else {
+      face = '😿'; state = 'sad'; message = '好久没练习了...今天开始吧，小妍陪你！';
+    }
+    body.textContent = face;
+    if (state) body.classList.add(state);
+    this.petMessage = message;
+    // Auto-show speech on first load
+    speech.textContent = message;
+    speech.classList.add('show');
+    setTimeout(() => { if (speech.textContent === message) speech.classList.remove('show'); }, 4000);
+  },
+
+  petClick() {
+    const body = document.getElementById('petBody');
+    const speech = document.getElementById('petSpeech');
+    // Burst sparkles
+    for (let i=0;i<6;i++) {
+      const s=document.createElement('span');
+      s.className='pet-sparkle'; s.textContent=['✨','💜','⭐','💫','🌟','💖'][i];
+      s.style.left=(30+Math.random()*40)+'px'; s.style.top=(20+Math.random()*30)+'px';
+      s.style.animationDelay=(i*0.08)+'s';
+      body.appendChild(s);
+      setTimeout(()=>s.remove(),900);
+    }
+    // Quick bounce
+    body.style.transform='scale(1.15)'; setTimeout(()=>body.style.transform='',200);
+    // Show speech
+    const messages = [
+      this.petMessage || '加油！小妍相信你！',
+      '每一次练习都是进步💪',
+      '累了就休息一下，但别忘了回来哦~',
+      '知不足而奋进，望远山而前行✨',
+      '今天的努力是明天的基石🏗️',
+      '做最优秀的书记员！',
+      '点击⚡开始练习吧！',
+      '坚持就是胜利，小妍陪你每一天💜',
+    ];
+    const msg = messages[Math.floor(Math.random()*messages.length)];
+    speech.textContent = msg;
+    speech.classList.add('show');
+    setTimeout(()=>speech.classList.remove('show'), 3000);
+  },
+
+  async saveGoal() {
+    const val = parseInt(document.getElementById('goalInput').value);
+    if (!val || val<100 || val>50000) { this.toast('⚠️','请输入 100-50000 之间的数字'); return; }
+    this.settings.dailyGoal = val;
+    await this.api('/api/settings',{method:'PUT',body:JSON.stringify({dailyGoal:val})});
+    this.toast('✅','每日目标已更新');
+    this.loadWelcome();
+  },
+
+  // ─── Calendar ───
+  async loadCalendar() {
+    const data = await this.api(`/api/calendar?year=${this.calYear}&month=${this.calMonth}`);
+    if (!data) return;
+    document.getElementById('calTitle').textContent = `${data.year}年 ${data.month}月`;
+    const weekDays = ['日','一','二','三','四','五','六'];
+    document.getElementById('calHeader').innerHTML = weekDays.map(d=>`<div class="calendar-header">${d}</div>`).join('');
+    let html = '';
+    for (let i=0;i<data.firstDayOfWeek;i++) html += '<div class="calendar-day other-month"></div>';
+    data.days.forEach(d=>{
+      let cls = 'calendar-day';
+      if (d.isToday) cls += ' today';
+      else if (d.practiced) cls += ' practiced';
+      html += `<div class="${cls}" title="${d.practiced?d.chars+'字':''}">${d.day}</div>`;
+    });
+    document.getElementById('calBody').innerHTML = html;
+  },
+
+  calendarShift(delta) {
+    this.calMonth += delta;
+    if (this.calMonth>12) { this.calMonth=1; this.calYear++; }
+    if (this.calMonth<1) { this.calMonth=12; this.calYear--; }
+    this.loadCalendar();
+  },
+
+  // ─── Materials Page ───
+  async loadMaterialsPage() {
+    const data = await this.api('/api/materials');
+    if (!data) return;
+    this.materials = data.materials||[];
+    this.renderMatList();
+  },
+
+  renderMatList() {
+    const container = document.getElementById('matList');
+    if (this.materials.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">暂无材料，点击"新建"创建</div>';
+      return;
+    }
+    const currentId = document.getElementById('matSelect')?.value;
+    container.innerHTML = this.materials.map(m=>`
+      <div class="mat-list-item ${currentId===m.id?'selected':''}" onclick="app.selectMatItem('${m.id}')">
+        <span class="mat-title" title="${this.esc(m.title)}">📄 ${this.esc(m.title)}</span>
+        <span class="mat-count">${m.charCount} 字</span>
+      </div>
+    `).join('');
+    // Keep hidden select for value tracking
+    if (!document.getElementById('matSelect')) {
+      const sel = document.createElement('select');
+      sel.id = 'matSelect'; sel.style.display = 'none';
+      document.getElementById('view-materials').appendChild(sel);
+    }
+  },
+
+  selectMatItem(id) {
+    this.onMatSelect(id);
+  },
+
+  onMatSelect(id) {
+    document.getElementById('matSelect').value = id;
+    const m = this.materials.find(m=>m.id===id);
+    if (m) {
+      document.getElementById('matTitle').value = m.title||'';
+      document.getElementById('matContent').value = m.content||'';
+      document.getElementById('matInfo').textContent = `字数: ${m.charCount} | 创建于 ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
+      document.getElementById('matDeleteBtn').style.display = 'inline-flex';
+      document.getElementById('matEditorTitle').textContent = '✏️ 编辑材料';
+    } else {
+      this.matClear();
+    }
+    this.renderMatList();
+  },
+
+  matClear() {
+    document.getElementById('matSelect').value = '';
+    document.getElementById('matTitle').value = '';
+    document.getElementById('matContent').value = '';
+    document.getElementById('matInfo').textContent = '';
+    document.getElementById('matDeleteBtn').style.display = 'none';
+    document.getElementById('saveGenBtn').style.display = 'none';
+    document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
+    this.renderMatList();
+  },
+
+  async saveMaterial() {
+    const title = document.getElementById('matTitle').value.trim();
+    const content = document.getElementById('matContent').value.trim();
+    if (!content) { this.toast('⚠️','请输入材料内容'); return; }
+    const activeId = document.getElementById('matSelect').value;
+    if (activeId) {
+      await this.api(`/api/materials/${activeId}`,{method:'PUT',body:JSON.stringify({title:title||'未命名材料',content})});
+    } else {
+      await this.api('/api/materials',{method:'POST',body:JSON.stringify({title:title||'未命名材料',content})});
+    }
+    this.toast('✅','材料已保存');
+    const data = await this.api('/api/materials');
+    if (data) { this.materials = data.materials||[]; }
+    this.matClear();
+  },
+
+  async deleteMaterial() {
+    const id = document.getElementById('matSelect').value;
+    if (!id||!confirm('确定删除？')) return;
+    await this.api(`/api/materials/${id}`,{method:'DELETE'});
+    this.toast('🗑️','已删除');
+    const data = await this.api('/api/materials');
+    if (data) { this.materials = data.materials||[]; }
+    this.matClear();
+  },
+
+  generateMaterial() {
+    const targetCount = parseInt(document.getElementById('genWordCount').value) || 300;
+    const sentences = [
+      '原告与被告于二〇二四年三月签订买卖合同，约定由原告向被告供应建材一批，总价款为人民币五十万元整。',
+      '被告收到货物后，未按合同约定支付货款，至今尚欠原告货款人民币三十二万元。',
+      '经原告多次催讨，被告以货物存在质量问题为由拒绝支付剩余款项。',
+      '本院认为，依法成立的合同受法律保护，当事人应当按照约定全面履行自己的义务。',
+      '根据《中华人民共和国民法典》第五百零九条规定，当事人应当按照约定全面履行自己的义务。',
+      '被告提出货物存在质量问题的抗辩理由，但未能提供充分证据予以证明。',
+      '根据谁主张谁举证的原则，被告应当对其主张的事实承担举证责任。',
+      '原告提交的送货单、对账单等证据能够形成完整的证据链条。',
+      '本院依法组成合议庭，公开开庭进行了审理，本案现已审理终结。',
+      '审判长宣布开庭，核对当事人身份，宣布案由，宣布审判人员、书记员名单。',
+      '告知当事人有关的诉讼权利义务，询问当事人是否提出回避申请。',
+      '原告及其委托诉讼代理人到庭参加诉讼，被告经合法传唤未到庭。',
+      '法庭调查阶段，原告宣读起诉状，陈述诉讼请求及事实理由。',
+      '原告向法庭提交以下证据：一、买卖合同原件一份；二、送货单五份；三、微信聊天记录截图。',
+      '被告质证认为，送货单上的签名并非被告本人所签，申请进行笔迹鉴定。',
+      '法庭辩论阶段，双方围绕争议焦点充分发表了辩论意见。',
+      '本院认为本案事实清楚，证据确实充分，权利义务关系明确。',
+      '判决如下：被告于本判决生效之日起十日内支付原告货款人民币三十二万元及逾期利息。',
+      '如不服本判决，可在判决书送达之日起十五日内向本院递交上诉状。',
+      '上诉人因不服一审法院民事判决，特向贵院提起上诉。',
+      '原判决认定事实不清，适用法律错误，请求二审法院依法改判。',
+      '经审理查明，双方当事人对案件基本事实没有争议，仅对法律适用问题存在分歧。',
+      '本院根据查明的事实，依据相关法律规定，作出如下裁判。',
+      '书记员应当将法庭审理的全部活动记入笔录，由审判人员和书记员签名。',
+      '当事人和其他诉讼参与人认为对自己的陈述记录有遗漏或者差错的，有权申请补正。',
+      '法庭笔录应当当庭宣读，也可以告知当事人和其他诉讼参与人当庭或者在五日内阅读。',
+      '本庭现在宣布休庭，双方当事人阅读笔录无误后签字。',
+      '刑事案件中，被告人有权获得辩护，人民法院有义务保证被告人获得辩护。',
+      '公诉机关指控被告人犯有贪污罪，向本院提起公诉。',
+      '辩护人认为，公诉机关的指控证据不足，不能认定被告人有罪。',
+      '根据疑罪从无的原则，在证据不足以证明被告人有罪的情况下应当宣告无罪。',
+      '本院依法对被告人进行了讯问，听取了辩护人的辩护意见和公诉人的公诉意见。',
+      '经合议庭评议，本院认为被告人犯罪事实清楚，证据确实充分，指控罪名成立。',
+      '证人应当出庭作证，接受双方当事人及审判人员的询问。',
+      '鉴定人出庭就鉴定意见接受双方当事人质询。',
+      '民事诉讼中，当事人有权在法律规定的范围内处分自己的民事权利和诉讼权利。',
+      '调解应当遵循自愿和合法原则，在查明事实、分清是非的基础上进行。',
+      '本院主持调解，双方当事人自愿达成如下协议。',
+      '执行程序中，被执行人不履行法律文书确定的义务的，人民法院可以对其采取限制消费措施。',
+      '申请执行人向本院申请强制执行，本院依法立案执行。',
+      '关于合同纠纷案件，本庭归纳以下争议焦点：一、合同效力问题；二、违约责任承担问题；三、损失赔偿数额问题。',
+      '原告诉称，双方签订的合同系双方真实意思表示，内容不违反法律强制性规定，合同合法有效。',
+      '被告辩称，原告提供的货物存在严重质量缺陷，不符合合同约定的技术标准。',
+      '本院委托具有资质的鉴定机构对涉案货物进行了质量鉴定，鉴定结论为货物符合国家标准。',
+      '根据鉴定结论，被告关于货物质量问题的抗辩不能成立，应承担相应的违约责任。',
+      '关于损失赔偿，原告提供了因被告违约造成的实际损失的相关证据。',
+      '本院对原告主张的损失逐项进行了审查，对合理部分予以支持，对缺乏依据的部分不予支持。',
+      '在案件审理过程中，本院多次组织双方进行调解，但因分歧较大未能达成一致。',
+      '本案涉及的法律关系复杂，争议标的额较大，本院依法适用普通程序进行审理。',
+      '诉讼过程中，原告申请财产保全，本院经审查认为符合法律规定，裁定予以准许。',
+      '人民法院审理民事案件，应当以事实为依据，以法律为准绳，依法保护当事人的合法权益。',
+      '根据民事诉讼法的规定，当事人对自己提出的主张，有责任提供证据加以证明。',
+      '没有证据或者证据不足以证明当事人的事实主张的，由负有举证责任的当事人承担不利后果。',
+      '人民法院应当按照法定程序，全面地、客观地审查核实证据。',
+      '证据应当在法庭上出示，由当事人互相质证，未经质证的证据不能作为认定案件事实的根据。',
+      '以侵害他人合法权益或者违反法律禁止性规定的方法取得的证据，不能作为认定案件事实的根据。',
+      '一方当事人提出的证据，另一方当事人认可或者提出的相反证据不足以反驳的，人民法院可以确认其证明力。',
+      '人民法院就数个证据对同一事实的证明力，可以依照下列原则认定。',
+    ];
+    const sections = [
+      '案件基本情况', '庭审记录', '法庭调查', '证据材料', '法庭辩论',
+      '合议庭评议', '判决理由', '裁判结果', '权利告知',
+    ];
+    let result = '';
+    const isLong = targetCount > 800;
+
+    while ([...result].length < targetCount) {
+      if (isLong && [...result].length > 200 && Math.random() < 0.12) {
+        const sec = sections[Math.floor(Math.random() * sections.length)];
+        result += '\n\n【' + sec + '】\n\n';
+      }
+      const s = sentences[Math.floor(Math.random() * sentences.length)];
+      result += s;
+      if (Math.random() < 0.35 && [...result].length < targetCount) result += '\n';
+      if (Math.random() < 0.15 && [...result].length < targetCount) result += '\n';
+    }
+    // Trim to target
+    const chars = [...result];
+    if (chars.length > targetCount) {
+      result = chars.slice(0, targetCount).join('');
+      const lastPeriod = Math.max(result.lastIndexOf('。'), result.lastIndexOf('；'), result.lastIndexOf('！'));
+      if (lastPeriod > targetCount * 0.7) result = result.slice(0, lastPeriod + 1);
+    }
+    document.getElementById('matContent').value = result;
+    document.getElementById('matTitle').value = '法院练习材料 ' + [...result].length + '字';
+    document.getElementById('matInfo').textContent = '字数: ' + [...result].length + ' | 自动生成（未保存）';
+    document.getElementById('saveGenBtn').style.display = 'inline-flex';
+    this.toast('✨', `已生成 ${[...result].length} 字法院练习材料`);
+  },
+
+  saveGenerated() {
+    document.getElementById('matSelect').value = '';
+    document.getElementById('matDeleteBtn').style.display = 'none';
+    document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
+    document.getElementById('saveGenBtn').style.display = 'none';
+    if (document.getElementById('matContent').value.trim()) {
+      document.getElementById('matInfo').textContent = '字数: ' + [...document.getElementById('matContent').value].length + ' | 点击保存';
+    }
+    this.saveMaterial();
+  },
+
+  // ─── Exam Mode ───
+  setMode(mode) {
+    if (this.isPracticing) { this.toast('⚠️','请先结束当前练习再切换模式'); return; }
+    this.practiceMode = mode;
+    this.resetPractice();
+    const pBtn = document.getElementById('modePracticeBtn');
+    const eBtn = document.getElementById('modeExamBtn');
+    const examCfg = document.getElementById('examConfig');
+    const finishBtn = document.querySelector('#view-practice .btn-primary');
+    if (mode === 'exam') {
+      pBtn.style.background = 'transparent'; pBtn.style.color = 'var(--text-secondary)';
+      eBtn.style.background = 'var(--lavender-accent)'; eBtn.style.color = '#fff';
+      examCfg.style.display = 'flex';
+      this.examTimeLimit = (parseInt(document.getElementById('examTimeInput').value) || 20) * 60;
+      this.examTargetChars = parseInt(document.getElementById('examTargetInput').value) || 2000;
+      document.getElementById('timerLabel').textContent = '剩余时间';
+      document.getElementById('elapsedDisplay').textContent = this.formatTime(this.examTimeLimit);
+      document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
+      document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+      document.getElementById('examStatus').textContent = '';
+      if (finishBtn) finishBtn.textContent = '📝 提前交卷';
+    } else {
+      pBtn.style.background = 'var(--lavender-accent)'; pBtn.style.color = '#fff';
+      eBtn.style.background = 'transparent'; eBtn.style.color = 'var(--text-secondary)';
+      examCfg.style.display = 'none';
+      document.getElementById('timerLabel').textContent = '用时';
+      document.getElementById('elapsedDisplay').textContent = '00:00';
+      document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
+      document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+      document.getElementById('examStatus').textContent = '';
+      if (finishBtn) finishBtn.textContent = '🏁 结束练习';
+    }
+  },
+
+  // ─── Practice Page ───
+  async loadPracticePage() {
+    const data = await this.api('/api/materials');
+    if (!data) return;
+    this.materials = data.materials||[];
+    const sel = document.getElementById('pracMaterialSelect');
+    sel.innerHTML = '<option value="">-- 选择练习材料 --</option>';
+    this.materials.forEach(m=>{
+      const o=document.createElement('option'); o.value=m.id;
+      o.textContent = `${m.title} (${m.charCount}字)`; sel.appendChild(o);
+    });
+    if (data.activeId) { sel.value=data.activeId; this.selectPracticeMaterial(data.activeId); }
+    const settings = await this.api('/api/settings');
+    if (settings) {
+      this.settings.speed = settings.speed||1.0;
+      this.settings.hideReference = settings.hideReference||false;
+      document.getElementById('speedSlider').value = this.settings.speed;
+      document.getElementById('hideRefCheck').checked = this.settings.hideReference;
+      this.updateSpeedUI();
+      if (this.settings.hideReference) document.getElementById('referenceCard').style.display='none';
+    }
+    this.bindKeyboard();
+  },
+
+  selectPracticeMaterial(id) {
+    if (!id) {
+      this.activeMaterial = null;
+      document.getElementById('referenceDisplay').innerHTML = '👆 请先在上方选择练习材料，然后点击 ▶️ 开始';
+      return;
+    }
+    const m = this.materials.find(m=>m.id===id);
+    if (m) { this.activeMaterial = m; this.renderReference(); this.resetPractice(); }
+  },
+
+  // Speed
+  updateSpeed(value) {
+    if (value!==undefined) this.settings.speed=parseFloat(value);
+    document.getElementById('speedSlider').value=this.settings.speed;
+    document.getElementById('speedLabel').textContent=this.settings.speed.toFixed(1)+'x';
+    const pct=((this.settings.speed-0.5)/1.5)*100;
+    document.getElementById('speedSlider').style.setProperty('--range-fill',pct+'%');
+    this.api('/api/settings',{method:'PUT',body:JSON.stringify({speed:this.settings.speed})});
+  },
+
+  toggleHideRef() {
+    this.settings.hideReference=document.getElementById('hideRefCheck').checked;
+    document.getElementById('referenceCard').style.display=this.settings.hideReference?'none':'';
+    this.api('/api/settings',{method:'PUT',body:JSON.stringify({hideReference:this.settings.hideReference})});
+  },
+
+  // Reference
+  renderReference() {
+    if (!this.activeMaterial) return;
+    const chars = [...this.activeMaterial.content];
+    document.getElementById('referenceDisplay').innerHTML = chars.map(c=>`<span class="char-pending">${this.esc(c)}</span>`).join('');
+    document.getElementById('readCount').textContent='0';
+  },
+  esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; },
+
+  updateReferenceHighlight() {
+    if (!this.activeMaterial) return;
+    const chars=[...this.activeMaterial.content];
+    const inputChars=[...document.getElementById('typingInput').value];
+    const spans=document.getElementById('referenceDisplay').querySelectorAll('span');
+    for (let i=0;i<Math.min(chars.length,spans.length);i++) {
+      if (i<inputChars.length) {
+        spans[i].className = inputChars[i]===chars[i] ? 'char-correct' : 'char-error';
+      } else if (i===inputChars.length) {
+        spans[i].className='char-cursor';
+      } else { spans[i].className='char-pending'; }
+    }
+    document.getElementById('readCount').textContent=inputChars.length;
+  },
+
+  // Playback
+  prepareSpeech() {
+    if (!this.activeMaterial||!this.speechSupported) return;
+    const text=this.activeMaterial.content;
+    this.speechChunks=text.split(/(?<=[。！？；\n])/g).filter(s=>s.trim());
+    if (this.speechChunks.length===0) this.speechChunks=[text];
+    this.speechChunkIndex=0;
+  },
+  speakNextChunk() {
+    if (!this.speechSupported||!this.isPlaying) return;
+    if (this.speechChunkIndex>=this.speechChunks.length) { this.isPlaying=false; document.getElementById('playBtn').textContent='▶️'; return; }
+    this.utterance=new SpeechSynthesisUtterance(this.speechChunks[this.speechChunkIndex]);
+    this.utterance.lang='zh-CN'; this.utterance.rate=this.settings.speed;
+    this.utterance.onend=()=>{ this.speechChunkIndex++; if(this.isPlaying) this.speakNextChunk(); };
+    this.utterance.onerror=(e)=>{
+      if (e.error!=='canceled'&&e.error!=='interrupted') { this.speechChunkIndex++; if(this.isPlaying) this.speakNextChunk(); }
+    };
+    window.speechSynthesis.speak(this.utterance);
+  },
+
+  togglePlay() {
+    if (!this.activeMaterial) { this.toast('⚠️','请先选择练习材料'); return; }
+    this.isPlaying ? this.pausePlayback() : this.startPlayback();
+  },
+  startPlayback() {
+    this.isPlaying=true; document.getElementById('playBtn').textContent='⏸️';
+    if (!this.isPracticing) this.startPractice();
+    if (this.speechSupported) {
+      if (this.speechChunkIndex===0||this.speechChunks.length===0) this.prepareSpeech();
+      this.speakNextChunk();
+    }
+  },
+  pausePlayback() {
+    this.isPlaying=false; document.getElementById('playBtn').textContent='▶️';
+    if (this.speechSupported) window.speechSynthesis.cancel();
+    if (this.isPracticing) this.pauseTimer();
+  },
+
+  // Practice lifecycle
+  startPractice() {
+    this.isPracticing=true; this.startTime=Date.now(); this.elapsedBeforePause=0; this.pauseStart=null;
+    this.currentCharIndex=0; this.correctChars=0; this.incorrectChars=0;
+    this.examSubmitted = false;
+    if (this.practiceMode === 'exam') {
+      this.examTimeLimit = (parseInt(document.getElementById('examTimeInput').value) || 20) * 60;
+      this.examTargetChars = parseInt(document.getElementById('examTargetInput').value) || 2000;
+      this.examTimeRemaining = this.examTimeLimit;
+      document.getElementById('examStatus').textContent = '考试进行中...';
+      document.getElementById('examStatus').style.color = 'var(--lavender-accent)';
+    }
+    document.getElementById('typingInput').value=''; document.getElementById('typingInput').focus();
+    if (this.activeMaterial) this.renderReference();
+    this.startTimer(); this.updateStats();
+  },
+  resetPractice() {
+    this.pausePlayback(); this.isPracticing=false;
+    this.startTime=null; this.elapsedBeforePause=0; this.pauseStart=null;
+    this.currentCharIndex=0; this.correctChars=0; this.incorrectChars=0;
+    this.speechChunkIndex=0; this.speechChunks=[];
+    this.examSubmitted = false;
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    document.getElementById('typingInput').value='';
+    document.getElementById('playBtn').textContent='▶️';
+    document.getElementById('wpmDisplay').textContent='0';
+    document.getElementById('accuracyDisplay').textContent='--';
+    document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
+    document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+    document.getElementById('examStatus').textContent = '';
+    if (this.practiceMode === 'exam') {
+      document.getElementById('elapsedDisplay').textContent = this.formatTime(this.examTimeLimit);
+    } else {
+      document.getElementById('elapsedDisplay').textContent = '00:00';
+    }
+    document.getElementById('charCountDisplay').textContent='0';
+    if (this.activeMaterial) this.renderReference();
+  },
+  async finishPractice(isAutoSubmit) {
+    if (!this.isPracticing||!this.activeMaterial) return;
+    if (this.examSubmitted) return;
+    this.examSubmitted = true;
+    this.pausePlayback();
+    const totalChars=this.correctChars+this.incorrectChars;
+    const elapsed = this.practiceMode === 'exam'
+      ? this.examTimeLimit - this.examTimeRemaining
+      : this.getElapsedSeconds();
+    const minutes=elapsed/60;
+    const wpm=minutes>0?Math.round(this.correctChars/minutes):0;
+    const accuracy=totalChars>0?Math.round((this.correctChars/totalChars)*100):100;
+    const result=await this.api('/api/history',{method:'POST',body:JSON.stringify({
+      materialId:this.activeMaterial.id, materialTitle:this.activeMaterial.title,
+      wpm,accuracy,totalChars,correctChars:this.correctChars,incorrectChars:this.incorrectChars,
+      duration:elapsed,speed:this.settings.speed,
+      mode: this.practiceMode,
+      examTimeLimit: this.practiceMode==='exam'?this.examTimeLimit:null,
+      examTargetChars: this.practiceMode==='exam'?this.examTargetChars:null,
+    })});
+    this.showResults(wpm,accuracy,totalChars,elapsed,isAutoSubmit);
+    if (result&&result.newAchievements&&result.newAchievements.length>0) {
+      setTimeout(()=>this.showAchievement(result.newAchievements[0]),800);
+    }
+    this.isPracticing=false;
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    document.getElementById('examStatus').textContent = this.practiceMode==='exam'?'考试已结束':'';
+    document.getElementById('examStatus').style.color = 'var(--text-secondary)';
+  },
+
+  // Typing
+  onTyping() {
+    if (!this.isPracticing||!this.activeMaterial) return;
+    const input=document.getElementById('typingInput').value;
+    const refChars=[...this.activeMaterial.content];
+    const inputChars=[...input];
+    this.correctChars=0; this.incorrectChars=0;
+    for (let i=0;i<inputChars.length;i++) {
+      if (i<refChars.length&&inputChars[i]===refChars[i]) this.correctChars++;
+      else this.incorrectChars++;
+    }
+    this.updateReferenceHighlight(); this.updateStats();
+    if (inputChars.length>=refChars.length&&refChars.length>0) setTimeout(()=>this.finishPractice(),500);
+  },
+
+  // Timer
+  formatTime(secs) { const m=Math.floor(secs/60),s=Math.floor(secs%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); },
+  startTimer() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval=setInterval(()=>{
+      if (this.pauseStart) return;
+      if (this.practiceMode==='exam') {
+        const realElapsed = (Date.now()-this.startTime)/1000;
+        this.examTimeRemaining = Math.max(0, this.examTimeLimit - realElapsed);
+        if (this.examTimeRemaining <= 0 && !this.examSubmitted) {
+          this.finishPractice(true);
+          return;
+        }
+      }
+      this.updateStats();
+    }, 200);
+  },
+  pauseTimer() { this.pauseStart=Date.now(); },
+  getElapsedSeconds() {
+    if (!this.startTime) return 0;
+    let e=this.elapsedBeforePause;
+    e+=(this.pauseStart?this.pauseStart:Date.now())-this.startTime;
+    return Math.max(0,e/1000);
+  },
+
+  // Stats
+  updateStats() {
+    let elapsed;
+    if (this.practiceMode==='exam') {
+      elapsed = this.examTimeLimit - this.examTimeRemaining;
+    } else {
+      elapsed = this.getElapsedSeconds();
+    }
+    const minutes=elapsed/60;
+    const wpm=minutes>0.05?Math.round(this.correctChars/minutes):0;
+    const total=this.correctChars+this.incorrectChars;
+    const accuracy=total>0?Math.round((this.correctChars/total)*100):100;
+    document.getElementById('wpmDisplay').textContent=wpm;
+    document.getElementById('accuracyDisplay').textContent=accuracy+'%';
+    document.getElementById('charCountDisplay').textContent=total;
+
+    const timerEl = document.getElementById('elapsedDisplay');
+    const timerCard = document.getElementById('timerCard');
+    if (this.practiceMode==='exam') {
+      const remaining = this.examTimeRemaining;
+      timerEl.textContent = this.formatTime(remaining);
+      // Warning states
+      timerEl.className = 'stat-value text-xl';
+      timerCard.className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+      if (remaining <= 60) {
+        timerEl.classList.add('timer-danger');
+        timerCard.classList.add('timer-card-danger');
+      } else if (remaining <= 180) {
+        timerEl.classList.add('timer-warning');
+        timerCard.classList.add('timer-card-warn');
+      }
+    } else {
+      const m=Math.floor(elapsed/60),s=Math.floor(elapsed%60);
+      timerEl.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    }
+  },
+
+  // Results
+  showResults(wpm,accuracy,totalChars,elapsed,isAutoSubmit) {
+    const isExam = this.practiceMode==='exam';
+    document.getElementById('resultWPM').textContent=wpm;
+    document.getElementById('resultAccuracy').textContent=accuracy+'%';
+    document.getElementById('resultChars').textContent=totalChars;
+    const m=Math.floor(elapsed/60),s=Math.floor(elapsed%60);
+    document.getElementById('resultDuration').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    document.getElementById('resultCorrect').textContent=this.correctChars;
+    document.getElementById('resultIncorrect').textContent=this.incorrectChars;
+    let emoji,msg;
+    if (isExam && isAutoSubmit) {
+      emoji='⏰'; msg='考试时间到！系统已自动提交，来看看你的成绩吧！';
+    } else if (isExam) {
+      if (wpm>=120) { emoji='🏆'; msg='考试完成！这个速度太棒了，正式考试也一定能行！'; }
+      else if (wpm>=80) { emoji='📝'; msg='考试完成！稳扎稳打，继续保持练习！'; }
+      else { emoji='📋'; msg='考试完成！每一次模拟都是宝贵的经验！'; }
+    } else {
+      if (wpm>=150) { emoji='⚡'; msg='指尖飞舞！今天的你，离优秀书记员又近了一步！'; }
+      else if (wpm>=100) { emoji='🚀'; msg='渐入佳境！保持这个节奏，你一定能行！'; }
+      else if (wpm>=60) { emoji='💪'; msg='稳扎稳打！每一次练习都是积累，继续加油！'; }
+      else { emoji='🌱'; msg='千里之行始于足下，今天的努力是明天的基石！'; }
+    }
+    document.getElementById('resultsEmoji').textContent=emoji;
+    document.getElementById('resultEncouragement').textContent=msg;
+    document.getElementById('resultsModal').style.display='flex';
+  },
+  closeResults() {
+    document.getElementById('resultsModal').style.display='none';
+    this.resetPractice(); document.getElementById('typingInput').focus();
+  },
+
+  // Achievement
+  showAchievement(ach) {
+    document.getElementById('achIcon').textContent=ach.icon;
+    document.getElementById('achName').textContent=ach.name;
+    document.getElementById('achDesc').textContent=ach.desc;
+    document.getElementById('achievementModal').style.display='flex';
+  },
+  closeAchievement() { document.getElementById('achievementModal').style.display='none'; },
+
+  // Keyboard
+  bindKeyboard() {
+    document.addEventListener('keydown',(e)=>{
+      if (e.code==='Space'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'&&this.currentView==='practice') {
+        e.preventDefault(); this.togglePlay();
+      }
+    });
+    const ti=document.getElementById('typingInput');
+    if (ti) ti.addEventListener('keydown',(e)=>{
+      if (e.code==='Space'&&e.ctrlKey) { e.preventDefault(); this.togglePlay(); }
+    });
+  },
+
+  // Toast
+  toast(icon,msg) {
+    const ex=document.querySelector('.toast'); if (ex) ex.remove();
+    const t=document.createElement('div'); t.className='toast';
+    t.innerHTML=`<span>${icon}</span> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); },2500);
+  }
+};
+
+document.addEventListener('DOMContentLoaded',()=>app.init());
+</script>
+</body>
+</html>

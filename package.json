@@ -1,0 +1,13 @@
+{
+  "name": "liyan-typing-studio",
+  "version": "1.0.0",
+  "description": "溧妍的打字练习室 - 法院书记员听写模拟训练平台",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
