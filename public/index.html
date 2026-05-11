@@ -305,6 +305,7 @@
       <button class="nav-link active" data-view="welcome" onclick="app.navTo('welcome')">🏡 首页</button>
       <button class="nav-link" data-view="materials" onclick="app.navTo('materials')">📝 材料</button>
       <button class="nav-link cta-link" data-view="practice" onclick="app.navTo('practice')">⚡ 开始练习</button>
+      <button class="nav-link" data-view="users" id="adminNavLink" style="display:none" onclick="app.navTo('users')">👥 用户管理</button>
       <button class="btn-secondary text-sm" onclick="app.logout()" style="margin-left:8px">🚪 退出</button>
     </div>
   </header>
@@ -448,6 +449,29 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ─── Users View (Admin) ─── -->
+  <div id="view-users" class="view p-4" style="max-width:1100px; margin:0 auto">
+    <!-- Section 1: Progress Monitoring -->
+    <div class="card p-6 mb-4">
+      <h2 class="text-lg font-bold mb-4" style="color:var(--lavender-dark)">📊 学员进度监控</h2>
+      <div id="adminStatsTable" style="overflow-x:auto">
+        <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px">加载中...</div>
+      </div>
+    </div>
+
+    <!-- Section 2: User Account Management -->
+    <div class="card p-6">
+      <h2 class="text-lg font-bold mb-4" style="color:var(--lavender-dark)">👥 账号管理</h2>
+      <div class="flex gap-2 mb-4 flex-wrap">
+        <input id="newUsername" class="p-2 rounded-lg border text-sm" style="border-color:var(--lavender-light);outline:none;width:160px" placeholder="账号 (字母/数字)">
+        <input id="newPassword" type="text" class="p-2 rounded-lg border text-sm" style="border-color:var(--lavender-light);outline:none;width:140px" placeholder="密码 (4位以上)">
+        <button class="btn-primary text-sm" onclick="app.addUser()">➕ 添加用户</button>
+      </div>
+      <div id="userAddError" style="display:none;color:#ef4444;font-size:12px;margin-bottom:8px"></div>
+      <div id="userList" class="flex flex-col gap-1"></div>
     </div>
   </div>
 
@@ -606,12 +630,13 @@ const app = {
   materials: [], activeMaterial: null,
   settings: { speed: 1.0, dailyGoal: 1000, hideReference: false },
   stats: { streak: 0, todayChars: 0, dailyGoal: 1000, todayPercent: 0, achievements: [] },
-  token: null,
+  token: null, isAdmin: false,
   currentView: 'welcome',
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth() + 1,
   speechSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
   speechChunks: [], speechChunkIndex: 0, utterance: null, petMessage: '',
+  editingMaterialId: null,
   // Exam mode
   practiceMode: 'practice',
   examTimeLimit: 1200, // seconds
@@ -626,8 +651,8 @@ const app = {
     if (token) {
       this.token = token;
       const check = await this.api('/api/auth/check');
-      if (check && check.valid) { this.showApp(); return; }
-      sessionStorage.removeItem('authToken'); this.token = null;
+      if (check && check.valid) { this.isAdmin = !!check.isAdmin; this.showApp(); return; }
+      sessionStorage.removeItem('authToken'); this.token = null; this.isAdmin = false;
     }
     this.showLogin();
   },
@@ -635,6 +660,7 @@ const app = {
   showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; },
   showApp() {
     document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('adminNavLink').style.display = this.isAdmin ? '' : 'none';
     this.navTo('welcome');
   },
 
@@ -648,6 +674,7 @@ const app = {
     if (!result || result.error) { errEl.textContent = result?.error || '登录失败'; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
     this.token = result.token;
+    this.isAdmin = !!result.isAdmin;
     sessionStorage.setItem('authToken', result.token);
     this.showApp();
   },
@@ -687,6 +714,7 @@ const app = {
     if (view==='welcome') this.loadWelcome();
     if (view==='materials') this.loadMaterialsPage();
     if (view==='practice') this.loadPracticePage();
+    if (view==='users') this.loadUsersPage();
   },
 
   // ─── Welcome Page ───
@@ -862,7 +890,9 @@ const app = {
     const data = await this.api('/api/materials');
     if (!data) return;
     this.materials = data.materials||[];
+    if (!this.editingMaterialId && data.activeId) this.editingMaterialId = data.activeId;
     this.renderMatList();
+    if (this.editingMaterialId) this.onMatSelect(this.editingMaterialId);
   },
 
   renderMatList() {
@@ -871,19 +901,16 @@ const app = {
       container.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">暂无材料，点击"新建"创建</div>';
       return;
     }
-    const currentId = document.getElementById('matSelect')?.value;
-    container.innerHTML = this.materials.map(m=>`
-      <div class="mat-list-item ${currentId===m.id?'selected':''}" onclick="app.selectMatItem('${m.id}')">
-        <span class="mat-title" title="${this.esc(m.title)}">📄 ${this.esc(m.title)}</span>
-        <span class="mat-count">${m.charCount} 字</span>
-      </div>
-    `).join('');
-    // Keep hidden select for value tracking
-    if (!document.getElementById('matSelect')) {
-      const sel = document.createElement('select');
-      sel.id = 'matSelect'; sel.style.display = 'none';
-      document.getElementById('view-materials').appendChild(sel);
-    }
+    container.innerHTML = this.materials.map(m=>{
+      const isAdminMat = m.createdBy === 'admin';
+      const badge = isAdminMat ? ' <span style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-weight:700">官方</span>' : '';
+      return `
+        <div class="mat-list-item ${this.editingMaterialId===m.id?'selected':''}" onclick="app.selectMatItem('${m.id}')">
+          <span class="mat-title" title="${this.esc(m.title)}">📄 ${this.esc(m.title)}${badge}</span>
+          <span class="mat-count">${m.charCount} 字</span>
+        </div>
+      `;
+    }).join('');
   },
 
   selectMatItem(id) {
@@ -891,12 +918,13 @@ const app = {
   },
 
   onMatSelect(id) {
-    document.getElementById('matSelect').value = id;
+    this.editingMaterialId = id;
     const m = this.materials.find(m=>m.id===id);
     if (m) {
       document.getElementById('matTitle').value = m.title||'';
       document.getElementById('matContent').value = m.content||'';
-      document.getElementById('matInfo').textContent = `字数: ${m.charCount} | 创建于 ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
+      const creator = m.createdBy ? ` | 创建者: ${m.createdBy}` : '';
+      document.getElementById('matInfo').textContent = `字数: ${m.charCount}${creator} | ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
       document.getElementById('matDeleteBtn').style.display = 'inline-flex';
       document.getElementById('matEditorTitle').textContent = '✏️ 编辑材料';
     } else {
@@ -906,7 +934,7 @@ const app = {
   },
 
   matClear() {
-    document.getElementById('matSelect').value = '';
+    this.editingMaterialId = null;
     document.getElementById('matTitle').value = '';
     document.getElementById('matContent').value = '';
     document.getElementById('matInfo').textContent = '';
@@ -920,9 +948,8 @@ const app = {
     const title = document.getElementById('matTitle').value.trim();
     const content = document.getElementById('matContent').value.trim();
     if (!content) { this.toast('⚠️','请输入材料内容'); return; }
-    const activeId = document.getElementById('matSelect').value;
-    if (activeId) {
-      await this.api(`/api/materials/${activeId}`,{method:'PUT',body:JSON.stringify({title:title||'未命名材料',content})});
+    if (this.editingMaterialId) {
+      await this.api(`/api/materials/${this.editingMaterialId}`,{method:'PUT',body:JSON.stringify({title:title||'未命名材料',content})});
     } else {
       await this.api('/api/materials',{method:'POST',body:JSON.stringify({title:title||'未命名材料',content})});
     }
@@ -933,9 +960,9 @@ const app = {
   },
 
   async deleteMaterial() {
-    const id = document.getElementById('matSelect').value;
-    if (!id||!confirm('确定删除？')) return;
-    await this.api(`/api/materials/${id}`,{method:'DELETE'});
+    if (!this.editingMaterialId) { this.toast('⚠️','请先选择材料'); return; }
+    if (!confirm('确定删除？')) return;
+    await this.api(`/api/materials/${this.editingMaterialId}`,{method:'DELETE'});
     this.toast('🗑️','已删除');
     const data = await this.api('/api/materials');
     if (data) { this.materials = data.materials||[]; }
@@ -1036,7 +1063,7 @@ const app = {
   },
 
   saveGenerated() {
-    document.getElementById('matSelect').value = '';
+    this.editingMaterialId = null;
     document.getElementById('matDeleteBtn').style.display = 'none';
     document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
     document.getElementById('saveGenBtn').style.display = 'none';
@@ -1389,6 +1416,112 @@ const app = {
     if (ti) ti.addEventListener('keydown',(e)=>{
       if (e.code==='Space'&&e.ctrlKey) { e.preventDefault(); this.togglePlay(); }
     });
+  },
+
+  // ─── User Management (Admin) ───
+  async loadUsersPage() {
+    // Load stats table
+    const stats = await this.api('/api/admin/users/stats');
+    const statsContainer = document.getElementById('adminStatsTable');
+    if (stats && Array.isArray(stats) && stats.length > 0) {
+      const th = 'padding:10px 12px;font-size:12px;font-weight:700;color:var(--text-secondary);text-align:left;border-bottom:2px solid var(--lavender-light);white-space:nowrap';
+      const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid var(--lavender-light);vertical-align:middle';
+      statsContainer.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;min-width:800px">
+          <thead><tr>
+            <th style="${th}">用户</th>
+            <th style="${th};text-align:center">🔥 连续打卡</th>
+            <th style="${th};text-align:center">今日进度</th>
+            <th style="${th};text-align:center">练习次数</th>
+            <th style="${th};text-align:center">最佳 WPM</th>
+            <th style="${th};text-align:center">平均正确率</th>
+            <th style="${th};text-align:center">最近练习</th>
+          </tr></thead>
+          <tbody>${stats.map((s,i) => {
+            const rowBg = s.isAdmin ? 'background:#fef9e7' : (i%2===0 ? '' : 'background:var(--lavender-bg)');
+            const lastDate = s.lastPractice ? new Date(s.lastPractice) : null;
+            const lastStr = lastDate
+              ? `${lastDate.getMonth()+1}/${lastDate.getDate()} ${String(lastDate.getHours()).padStart(2,'0')}:${String(lastDate.getMinutes()).padStart(2,'0')}`
+              : '<span style="color:#c4b5d8">从未练习</span>';
+            const progColor = s.todayPercent>=100 ? '#22c55e' : (s.todayPercent>0 ? 'var(--lavender-accent)' : '#d0cce0');
+            const streakColor = s.streak>=7 ? '#f59e0b' : (s.streak>=3 ? 'var(--lavender-accent)' : 'var(--text-secondary)');
+            const accColor = s.totalPractices===0 ? '#c4b5d8' : (s.avgAccuracy>=95 ? '#22c55e' : s.avgAccuracy>=80 ? '#f59e0b' : 'var(--text-secondary)');
+            return `<tr style="${rowBg}">
+              <td style="${td};font-weight:600">
+                ${this.esc(s.username)}
+                ${s.isAdmin ? '<span style="font-size:10px;background:var(--lavender-accent);color:#fff;padding:2px 6px;border-radius:3px;margin-left:4px">管理员</span>' : ''}
+              </td>
+              <td style="${td};text-align:center;font-weight:700;color:${streakColor}">${s.streak>0?s.streak+'天':'—'}</td>
+              <td style="${td};text-align:center">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="flex:1;height:8px;border-radius:4px;background:var(--lavender-light);overflow:hidden;min-width:60px">
+                    <div style="height:100%;border-radius:4px;background:${progColor};width:${Math.max(s.todayPercent, 2)}%;transition:width 0.5s"></div>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:${progColor};min-width:32px;text-align:right">${s.todayPercent}%</span>
+                </div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${s.todayChars} / ${s.dailyGoal} 字</div>
+              </td>
+              <td style="${td};text-align:center;font-weight:600">${s.totalPractices>0?s.totalPractices+' 次':'—'}</td>
+              <td style="${td};text-align:center;font-weight:700;color:var(--lavender-accent)">${s.bestWPM>0?s.bestWPM:'—'}</td>
+              <td style="${td};text-align:center;font-weight:600;color:${accColor}">${s.totalPractices>0?s.avgAccuracy+'%':'—'}</td>
+              <td style="${td};text-align:center;font-size:11px;color:var(--text-secondary)">${lastStr}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      `;
+    } else {
+      statsContainer.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px">暂无用户数据</div>';
+    }
+
+    // Load user list for account management
+    const users = await this.api('/api/users');
+    const container = document.getElementById('userList');
+    if (!Array.isArray(users) || users.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px">暂无用户</div>';
+      return;
+    }
+    container.innerHTML = users.map(u => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:8px;${u.username==='admin'?'background:#fef9e7':''}">
+        <div>
+          <span style="font-weight:600;color:var(--text-primary)">${this.esc(u.username)}</span>
+          ${u.isAdmin?' <span style="font-size:10px;background:var(--lavender-accent);color:#fff;padding:2px 6px;border-radius:3px">管理员</span>':''}
+          <span style="font-size:11px;color:var(--text-secondary);margin-left:6px">创建于 ${new Date(u.createdAt).toLocaleDateString('zh-CN')}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-secondary text-xs" onclick="app.resetUserPwd('${u.username}')" style="padding:4px 10px">🔑 重置密码</button>
+          ${u.username!=='admin'?`<button class="btn-secondary text-xs" onclick="app.deleteUser('${u.username}')" style="padding:4px 10px;color:#ef4444">🗑️ 删除</button>`:''}
+        </div>
+      </div>
+    `).join('');
+  },
+
+  async addUser() {
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+    const errEl = document.getElementById('userAddError');
+    if (!username || !password) { errEl.textContent = '请输入账号和密码'; errEl.style.display = 'block'; return; }
+    const result = await this.api('/api/users', { method:'POST', body: JSON.stringify({username, password}) });
+    if (result && result.error) { errEl.textContent = result.error; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    this.toast('✅', `用户 ${username} 已创建`);
+    this.loadUsersPage();
+  },
+
+  async deleteUser(username) {
+    if (!confirm(`确定删除用户 "${username}" 吗？该用户的所有数据将被保留但无法登录。`)) return;
+    await this.api(`/api/users/${username}`, { method:'DELETE' });
+    this.toast('🗑️', `用户 ${username} 已删除`);
+    this.loadUsersPage();
+  },
+
+  async resetUserPwd(username) {
+    const newPwd = prompt(`为 "${username}" 设置新密码（至少4位）：`);
+    if (!newPwd) return;
+    if (newPwd.length < 4) { this.toast('⚠️','密码至少4位'); return; }
+    await this.api(`/api/users/${username}/password`, { method:'PUT', body: JSON.stringify({ password: newPwd }) });
+    this.toast('🔑', `${username} 密码已重置`);
   },
 
   // Toast

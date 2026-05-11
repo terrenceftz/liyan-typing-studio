@@ -1,5 +1,9 @@
 node_modules/
 data/*.json
+data/admin/
+data/ly/
+data/testuser/
+data/*/
 .DS_Store
 *.log
 .env
