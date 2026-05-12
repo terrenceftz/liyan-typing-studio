@@ -413,7 +413,7 @@ input[type="range"]::-moz-range-thumb {
         <div class="card p-4">
           <h2 class="section-title-sm mb-3">🎯 今日任务</h2>
           <div class="flex justify-between text-sm mb-1">
-            <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--accent)">0</b> 字</span>
+            <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--accent)">0</b> </span>
             <span style="color:var(--text-secondary)">目标 <b id="wGoal" style="color:var(--text)">1000</b> 字</span>
           </div>
           <div class="progress-bar mb-3"><div class="progress-fill" id="wProgressBar" style="width:0%"></div></div>
@@ -658,11 +658,11 @@ input[type="range"]::-moz-range-thumb {
   </div>
 
   <!-- Footer -->
-  <footer style="margin-top:32px; padding:20px 24px; text-align:center; border-top:2px solid var(--lavender-light)">
+  <footer style="margin-top:32px; padding:20px 24px; text-align:center; border-top:1.5px solid var(--border)">
     <p style="margin:0; font-size:13px; color:var(--text-secondary)">
-      © 2026 <b style="color:var(--lavender-dark)">溧妍的打字练习室</b> · 法院书记员听写模拟训练平台
+      © 2026 <b style="color:var(--text)">溧妍的打字练习室</b> · 法院书记员听写模拟训练平台
     </p>
-    <p style="margin:4px 0 0; font-size:11px; color:#b0a8c8">
+    <p style="margin:6px 0 0; font-size:11px; color:#b8aaa4">
       知不足而奋进，望远山而前行
     </p>
   </footer>
@@ -673,31 +673,31 @@ input[type="range"]::-moz-range-thumb {
   <div class="modal">
     <div class="text-center mb-4">
       <div id="resultsEmoji" class="text-5xl mb-3"></div>
-      <h2 class="text-2xl font-bold" style="color:var(--lavender-dark)">练习成绩单</h2>
+      <h2 class="text-2xl font-bold" style="color:var(--text)">练习成绩单</h2>
     </div>
-    <div class="grid grid-cols-2 gap-4 mb-4">
-      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
-        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultWPM">0</div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="text-center p-3 rounded-xl" style="background:var(--soft-bg2)">
+        <div class="text-2xl font-bold" style="color:var(--accent)" id="resultWPM">0</div>
         <div class="text-xs" style="color:var(--text-secondary)">WPM</div>
       </div>
-      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
-        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultAccuracy">0%</div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--soft-bg2)">
+        <div class="text-2xl font-bold" style="color:var(--accent)" id="resultAccuracy">0%</div>
         <div class="text-xs" style="color:var(--text-secondary)">正确率</div>
       </div>
-      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
-        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultChars">0</div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--soft-bg2)">
+        <div class="text-2xl font-bold" style="color:var(--text)" id="resultChars">0</div>
         <div class="text-xs" style="color:var(--text-secondary)">总字符数</div>
       </div>
-      <div class="text-center p-3 rounded-xl" style="background:var(--lavender-light)">
-        <div class="text-2xl font-bold" style="color:var(--lavender-dark)" id="resultDuration">00:00</div>
+      <div class="text-center p-3 rounded-xl" style="background:var(--soft-bg2)">
+        <div class="text-2xl font-bold" style="color:var(--text)" id="resultDuration">00:00</div>
         <div class="text-xs" style="color:var(--text-secondary)">用时</div>
       </div>
     </div>
-    <div id="resultEncouragement" class="text-center text-lg font-medium mb-4 p-4 rounded-xl" style="background:var(--lavender-bg);color:var(--lavender-dark)"></div>
+    <div id="resultEncouragement" class="text-center text-lg font-medium mb-4 p-4 rounded-xl" style="background:var(--soft-bg2);color:var(--text)"></div>
     <div class="text-center text-sm mb-4" style="color:var(--text-secondary)">
-      <span>正确: <b style="color:#22c55e" id="resultCorrect">0</b></span>
+      <span>正确: <b style="color:var(--success)" id="resultCorrect">0</b></span>
       <span class="mx-2">|</span>
-      <span>错误: <b style="color:var(--error-color)" id="resultIncorrect">0</b></span>
+      <span>错误: <b style="color:var(--error)" id="resultIncorrect">0</b></span>
     </div>
     <div class="text-center flex gap-2 justify-center">
       <button class="btn-primary" onclick="app.closeResults()">继续练习 💪</button>
@@ -710,8 +710,8 @@ input[type="range"]::-moz-range-thumb {
 <div id="achievementModal" class="modal-overlay" style="display:none">
   <div class="modal text-center">
     <div class="text-6xl mb-4 bounce-in" id="achIcon"></div>
-    <h2 class="text-xl font-bold mb-2" style="color:var(--lavender-dark)">🏆 成就解锁！</h2>
-    <div class="text-2xl font-bold mb-2" style="color:var(--lavender-accent)" id="achName"></div>
+    <h2 class="text-xl font-bold mb-2" style="color:var(--text)">🏆 成就解锁！</h2>
+    <div class="text-2xl font-bold mb-2" style="color:var(--accent)" id="achName"></div>
     <p class="text-sm mb-4" style="color:var(--text-secondary)" id="achDesc"></p>
     <button class="btn-primary" onclick="app.closeAchievement()">太棒了！</button>
   </div>
