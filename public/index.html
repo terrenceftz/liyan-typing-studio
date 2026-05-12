@@ -436,7 +436,14 @@
               class="text-xs" style="max-width:220px">
             <span id="uploadStatus" class="text-xs" style="color:var(--text-secondary)"></span>
           </div>
-          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">支持音频(mp3/wav)和Word(.docx)文件，音频可直接用于听打</p>
+          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">支持音频(mp3/wav)、Word(.docx)、文本(.txt) 文件</p>
+          <!-- Remote Audio URL -->
+          <div class="flex items-center gap-2 flex-wrap mt-2" style="padding-top:8px;border-top:1px dashed #d4cde8">
+            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">🔗 远程链接</span>
+            <input id="audioUrlInput" class="p-1 rounded border text-xs flex-1" style="border-color:var(--lavender-light);outline:none;min-width:200px" placeholder="粘贴音频直链 URL (mp3/wav等)">
+            <button class="btn-secondary text-xs" onclick="app.saveAudioLink()" style="padding:4px 10px;white-space:nowrap">💾 保存链接</button>
+          </div>
+          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">远程链接直接引用，无需上传文件</p>
           <div id="audioPreview" style="display:none;margin-top:8px">
             <audio id="matAudioPlayer" controls style="width:100%;max-width:400px"></audio>
           </div>
@@ -972,6 +979,7 @@ const app = {
     document.getElementById('matDeleteBtn').style.display = 'none';
     document.getElementById('saveGenBtn').style.display = 'none';
     document.getElementById('uploadStatus').textContent = '';
+    document.getElementById('audioUrlInput').value = '';
     document.getElementById('audioPreview').style.display = 'none';
     document.getElementById('matAudioPlayer').src = '';
     document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
@@ -1053,6 +1061,25 @@ const app = {
       status.textContent = '❌ 上传失败';
       status.style.color = '#ef4444';
     }
+  },
+
+  saveAudioLink() {
+    const url = document.getElementById('audioUrlInput').value.trim();
+    if (!url) { this.toast('⚠️','请输入音频链接'); return; }
+    if (!/^https?:\/\/.+\.(mp3|wav|ogg|m4a|aac|mp4|webm)(\?.*)?$/i.test(url) && !url.includes('audio')) {
+      // Allow anyway but warn if URL doesn't look like audio
+    }
+    this._uploadedAudio = { url, name: url.split('/').pop().split('?')[0] || '远程音频' };
+    document.getElementById('matTitle').value = this._uploadedAudio.name.replace(/\.[^.]+$/, '');
+    document.getElementById('matContent').value = '(远程音频练习)';
+    document.getElementById('matInfo').textContent = '远程音频: ' + this._uploadedAudio.name + ' | 请点击保存';
+    document.getElementById('audioUrlInput').value = '';
+    // Show preview
+    const preview = document.getElementById('audioPreview');
+    const player = document.getElementById('matAudioPlayer');
+    player.src = url;
+    preview.style.display = '';
+    this.toast('🔗','远程音频链接已加载，请点击保存');
   },
 
   generateMaterial() {
