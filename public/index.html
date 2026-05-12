@@ -643,6 +643,7 @@ input[type="range"]::-moz-range-thumb {
       <!-- Level Selection -->
       <div class="card p-4 mb-4">
         <h2 class="section-title-sm mb-3">🎯 选择关卡</h2>
+        <div id="fingerLegend" class="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-xs" style="color:var(--text-secondary)"></div>
         <div id="fingerLevels" class="grid grid-cols-5 gap-3"></div>
       </div>
       <!-- Practice Area -->
@@ -696,6 +697,7 @@ input[type="range"]::-moz-range-thumb {
         </div>
       </div>
       <div class="card p-4 mb-3">
+        <div id="fingerParaLegend" class="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-xs" style="color:var(--text-secondary)"></div>
         <div id="fingerParaKeyboard"></div>
       </div>
     </div>
@@ -1646,6 +1648,7 @@ const app = {
   },
 
   async fingerLoadLevels() {
+    this._renderFingerLegend();
     const data = await this.api('/api/fingering');
     const levels = (data && data.levels) || {};
     const container = document.getElementById('fingerLevels');
@@ -1791,6 +1794,7 @@ const app = {
   ],
 
   async fingerLoadPara() {
+    this._renderFingerLegend('fingerParaLegend');
     const sel = document.getElementById('fingerParaSelect');
     sel.innerHTML = '<option value="">-- 选择练习文本 --</option>' +
       this.fingerBuiltinTexts.map(t => `<option value="${t.id}">📄 ${t.title} (${t.content.length}字)</option>`).join('');
@@ -1882,6 +1886,16 @@ const app = {
   _fingerColorVal(f) {
     const map = { leftPinky: '#c4b5fd', leftRing: '#93c5fd', leftMiddle: '#86efac', leftIndex: '#fdba74', rightIndex: '#fb923c', rightMiddle: '#86efac', rightRing: '#93c5fd', rightPinky: '#c4b5fd' };
     return map[f] || '#e8ddd8';
+  },
+
+  _renderFingerLegend(containerId) {
+    const el = document.getElementById(containerId || 'fingerLegend');
+    if (!el) return;
+    const order = ['leftPinky','leftRing','leftMiddle','leftIndex','rightIndex','rightMiddle','rightRing','rightPinky','thumbs'];
+    el.innerHTML = order.map(f => {
+      const color = this._fingerColorVal(f);
+      return `<span class="inline-flex items-center gap-1"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${color}"></span>${this.fingerNames[f]}</span>`;
+    }).join('');
   },
 
   fingerParaReset() {
