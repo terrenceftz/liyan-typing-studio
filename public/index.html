@@ -871,13 +871,13 @@ const app = {
       const durM=Math.floor((r.duration||0)/60);
       const durS=Math.floor((r.duration||0)%60);
       const accClr=(r.accuracy||0)>=95?'#22c55e':(r.accuracy||0)>=80?'#f59e0b':'#ef4444';
-      const bg=i%2===0?'':'background:var(--lavender-bg)';
+      const bg=i%2===0?'':'background:var(--soft-bg2)';
       const isExam = r.mode==='exam';
       const badge = isExam ? ' <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-weight:700">考</span>' : '';
       return `<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;font-size:12px;${bg}">
         <span style="color:var(--text-secondary);width:38px;white-space:nowrap">${ds}</span>
         <span style="flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${this.esc(r.materialTitle||'')}">${this.esc(r.materialTitle||'—')}${badge}</span>
-        <span style="font-weight:700;color:var(--lavender-accent);width:36px;text-align:right">${r.wpm||0}</span>
+        <span style="font-weight:700;color:var(--accent);width:36px;text-align:right">${r.wpm||0}</span>
         <span style="font-weight:600;color:${accClr};width:36px;text-align:right">${r.accuracy||0}%</span>
         <span style="color:var(--text-secondary);width:40px;text-align:right">${String(durM).padStart(2,'0')}:${String(durS).padStart(2,'0')}</span>
       </div>`;
@@ -1098,7 +1098,7 @@ const app = {
     const file = input.files[0];
     if (!file) return;
     status.textContent = '上传中...';
-    status.style.color = 'var(--lavender-accent)';
+    status.style.color = 'var(--accent)';
     const formData = new FormData();
     formData.append('file', file);
     try {
@@ -1273,7 +1273,7 @@ const app = {
     const finishBtn = document.querySelector('#view-practice .btn-primary');
     if (mode === 'exam') {
       pBtn.style.background = 'transparent'; pBtn.style.color = 'var(--text-secondary)';
-      eBtn.style.background = 'var(--lavender-accent)'; eBtn.style.color = '#fff';
+      eBtn.style.background = 'var(--accent)'; eBtn.style.color = '#fff';
       examCfg.style.display = 'flex';
       this.examTimeLimit = (parseInt(document.getElementById('examTimeInput').value) || 20) * 60;
       this.examTargetChars = parseInt(document.getElementById('examTargetInput').value) || 2000;
@@ -1284,7 +1284,7 @@ const app = {
       document.getElementById('examStatus').textContent = '';
       if (finishBtn) finishBtn.textContent = '📝 提前交卷';
     } else {
-      pBtn.style.background = 'var(--lavender-accent)'; pBtn.style.color = '#fff';
+      pBtn.style.background = 'var(--accent)'; pBtn.style.color = '#fff';
       eBtn.style.background = 'transparent'; eBtn.style.color = 'var(--text-secondary)';
       examCfg.style.display = 'none';
       document.getElementById('timerLabel').textContent = '用时';
@@ -1454,7 +1454,7 @@ const app = {
       this.examTargetChars = parseInt(document.getElementById('examTargetInput').value) || 2000;
       this.examTimeRemaining = this.examTimeLimit;
       document.getElementById('examStatus').textContent = '考试进行中...';
-      document.getElementById('examStatus').style.color = 'var(--lavender-accent)';
+      document.getElementById('examStatus').style.color = 'var(--accent)';
     }
     document.getElementById('typingInput').value=''; document.getElementById('typingInput').focus();
     if (this.activeMaterial) this.renderReference();
@@ -1664,8 +1664,8 @@ const app = {
     const stats = await this.api('/api/admin/users/stats');
     const statsContainer = document.getElementById('adminStatsTable');
     if (stats && Array.isArray(stats) && stats.length > 0) {
-      const th = 'padding:10px 12px;font-size:12px;font-weight:700;color:var(--text-secondary);text-align:left;border-bottom:2px solid var(--lavender-light);white-space:nowrap';
-      const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid var(--lavender-light);vertical-align:middle';
+      const th = 'padding:10px 12px;font-size:12px;font-weight:700;color:var(--text-secondary);text-align:left;border-bottom:2px solid var(--border);white-space:nowrap';
+      const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle';
       statsContainer.innerHTML = `
         <table style="width:100%;border-collapse:collapse;min-width:800px">
           <thead><tr>
@@ -1678,23 +1678,23 @@ const app = {
             <th style="${th};text-align:center">最近练习</th>
           </tr></thead>
           <tbody>${stats.map((s,i) => {
-            const rowBg = s.isAdmin ? 'background:#fef9e7' : (i%2===0 ? '' : 'background:var(--lavender-bg)');
+            const rowBg = s.isAdmin ? 'background:#fef9e7' : (i%2===0 ? '' : 'background:var(--soft-bg2)');
             const lastDate = s.lastPractice ? new Date(s.lastPractice) : null;
             const lastStr = lastDate
               ? `${lastDate.getMonth()+1}/${lastDate.getDate()} ${String(lastDate.getHours()).padStart(2,'0')}:${String(lastDate.getMinutes()).padStart(2,'0')}`
               : '<span style="color:#c4b5d8">从未练习</span>';
-            const progColor = s.todayPercent>=100 ? '#22c55e' : (s.todayPercent>0 ? 'var(--lavender-accent)' : '#d0cce0');
-            const streakColor = s.streak>=7 ? '#f59e0b' : (s.streak>=3 ? 'var(--lavender-accent)' : 'var(--text-secondary)');
+            const progColor = s.todayPercent>=100 ? 'var(--success)' : (s.todayPercent>0 ? 'var(--accent)' : '#d5ceca');
+            const streakColor = s.streak>=7 ? '#f59e0b' : (s.streak>=3 ? 'var(--accent)' : 'var(--text-secondary)');
             const accColor = s.totalPractices===0 ? '#c4b5d8' : (s.avgAccuracy>=95 ? '#22c55e' : s.avgAccuracy>=80 ? '#f59e0b' : 'var(--text-secondary)');
             return `<tr style="${rowBg}">
               <td style="${td};font-weight:600">
                 ${this.esc(s.username)}
-                ${s.isAdmin ? '<span style="font-size:10px;background:var(--lavender-accent);color:#fff;padding:2px 6px;border-radius:3px;margin-left:4px">管理员</span>' : ''}
+                ${s.isAdmin ? '<span style="font-size:10px;background:var(--accent);color:#fff;padding:2px 6px;border-radius:3px;margin-left:4px">管理员</span>' : ''}
               </td>
               <td style="${td};text-align:center;font-weight:700;color:${streakColor}">${s.streak>0?s.streak+'天':'—'}</td>
               <td style="${td};text-align:center">
                 <div style="display:flex;align-items:center;gap:6px">
-                  <div style="flex:1;height:8px;border-radius:4px;background:var(--lavender-light);overflow:hidden;min-width:60px">
+                  <div style="flex:1;height:8px;border-radius:4px;background:var(--soft-bg);overflow:hidden;min-width:60px">
                     <div style="height:100%;border-radius:4px;background:${progColor};width:${Math.max(s.todayPercent, 2)}%;transition:width 0.5s"></div>
                   </div>
                   <span style="font-size:11px;font-weight:700;color:${progColor};min-width:32px;text-align:right">${s.todayPercent}%</span>
@@ -1702,7 +1702,7 @@ const app = {
                 <div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${s.todayChars} / ${s.dailyGoal} 字</div>
               </td>
               <td style="${td};text-align:center;font-weight:600">${s.totalPractices>0?s.totalPractices+' 次':'—'}</td>
-              <td style="${td};text-align:center;font-weight:700;color:var(--lavender-accent)">${s.bestWPM>0?s.bestWPM:'—'}</td>
+              <td style="${td};text-align:center;font-weight:700;color:var(--accent)">${s.bestWPM>0?s.bestWPM:'—'}</td>
               <td style="${td};text-align:center;font-weight:600;color:${accColor}">${s.totalPractices>0?s.avgAccuracy+'%':'—'}</td>
               <td style="${td};text-align:center;font-size:11px;color:var(--text-secondary)">${lastStr}</td>
             </tr>`;
@@ -1723,8 +1723,8 @@ const app = {
     container.innerHTML = users.map(u => `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:8px;${u.username==='admin'?'background:#fef9e7':''}">
         <div>
-          <span style="font-weight:600;color:var(--text-primary)">${this.esc(u.username)}</span>
-          ${u.isAdmin?' <span style="font-size:10px;background:var(--lavender-accent);color:#fff;padding:2px 6px;border-radius:3px">管理员</span>':''}
+          <span style="font-weight:600;color:var(--text)">${this.esc(u.username)}</span>
+          ${u.isAdmin?' <span style="font-size:10px;background:var(--accent);color:#fff;padding:2px 6px;border-radius:3px">管理员</span>':''}
           <span style="font-size:11px;color:var(--text-secondary);margin-left:6px">创建于 ${new Date(u.createdAt).toLocaleDateString('zh-CN')}</span>
         </div>
         <div style="display:flex;gap:6px">
