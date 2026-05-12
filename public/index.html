@@ -383,9 +383,9 @@ input[type="range"]::-moz-range-thumb {
   <!-- ─── Welcome View ─── -->
   <div id="view-welcome" class="view active p-4" style="max-width:960px; margin:0 auto">
     <!-- Greeting -->
-    <div class="card px-6 py-4 mb-4 text-center">
-      <h1 class="text-xl font-bold" style="color:var(--lavender-dark)" id="welcomeName">欢迎回来 👋</h1>
-      <p class="text-sm" style="color:var(--text-secondary)">每一次练习，都是向优秀书记员迈进的一步</p>
+    <div class="card px-6 py-5 mb-4 text-center">
+      <h1 class="text-xl font-bold" style="color:var(--text)" id="welcomeName">欢迎回来 👋</h1>
+      <p class="text-sm mt-1" style="color:var(--text-secondary)">每一次练习，都是向优秀书记员迈进的一步</p>
     </div>
 
     <!-- Row 1: Calendar + Right panel -->
@@ -394,13 +394,13 @@ input[type="range"]::-moz-range-thumb {
       <div style="flex:1 1 420px; min-width:340px">
         <div class="card p-5">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-base font-bold" style="color:var(--lavender-dark)">📅 打卡日历</h2>
+            <h2 class="section-title">📅 打卡日历</h2>
             <div class="streak-badge">🔥 连续 <span id="wStreak">0</span> 天</div>
           </div>
           <div class="flex items-center justify-between mb-3">
-            <button class="btn-icon" onclick="app.calendarShift(-1)" style="width:28px;height:28px;font-size:12px">◀</button>
-            <span id="calTitle" class="font-bold text-sm" style="color:var(--text-primary)"></span>
-            <button class="btn-icon" onclick="app.calendarShift(1)" style="width:28px;height:28px;font-size:12px">▶</button>
+            <button class="btn-icon btn-icon-sm" onclick="app.calendarShift(-1)">◀</button>
+            <span id="calTitle" class="font-bold text-sm" style="color:var(--text)"></span>
+            <button class="btn-icon btn-icon-sm" onclick="app.calendarShift(1)">▶</button>
           </div>
           <div class="calendar-grid mb-1" id="calHeader"></div>
           <div class="calendar-grid" id="calBody"></div>
@@ -411,19 +411,19 @@ input[type="range"]::-moz-range-thumb {
       <div style="flex:0 0 300px; display:flex; flex-direction:column; gap:14px">
         <!-- Progress + Goal merged -->
         <div class="card p-4">
-          <h2 class="text-sm font-bold mb-3" style="color:var(--lavender-dark)">🎯 今日任务</h2>
+          <h2 class="section-title-sm mb-3">🎯 今日任务</h2>
           <div class="flex justify-between text-sm mb-1">
-            <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--lavender-dark)">0</b> 字</span>
-            <span style="color:var(--text-secondary)">目标 <b id="wGoal" style="color:var(--lavender-dark)">1000</b> 字</span>
+            <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--accent)">0</b> 字</span>
+            <span style="color:var(--text-secondary)">目标 <b id="wGoal" style="color:var(--text)">1000</b> 字</span>
           </div>
-          <div class="progress-bar mb-2"><div class="progress-fill" id="wProgressBar" style="width:0%"></div></div>
+          <div class="progress-bar mb-3"><div class="progress-fill" id="wProgressBar" style="width:0%"></div></div>
           <div class="flex justify-between items-center">
-            <span id="wPercent" class="text-sm font-bold" style="color:var(--lavender-accent)">0%</span>
+            <span id="wPercent" class="text-lg font-bold" style="color:var(--accent)">0%</span>
             <div class="flex gap-1">
               <input id="goalInput" type="number" min="100" max="50000" step="100"
-                class="p-1 rounded border text-xs" style="width:80px;border-color:var(--lavender-light);outline:none"
+                class="input-sm" style="width:80px"
                 placeholder="目标字数">
-              <button class="btn-secondary text-xs" onclick="app.saveGoal()" style="padding:4px 10px">设置</button>
+              <button class="btn-secondary text-xs" onclick="app.saveGoal()">设置</button>
             </div>
           </div>
         </div>
