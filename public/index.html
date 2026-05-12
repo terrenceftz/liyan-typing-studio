@@ -437,6 +437,9 @@
             <span id="uploadStatus" class="text-xs" style="color:var(--text-secondary)"></span>
           </div>
           <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">支持音频(mp3/wav)和Word(.docx)文件，音频可直接用于听打</p>
+          <div id="audioPreview" style="display:none;margin-top:8px">
+            <audio id="matAudioPlayer" controls style="width:100%;max-width:400px"></audio>
+          </div>
         </div>
 
         <!-- Auto-generate -->
@@ -941,9 +944,19 @@ const app = {
       document.getElementById('matTitle').value = m.title||'';
       document.getElementById('matContent').value = m.content||'';
       const creator = m.createdBy ? ` | 创建者: ${m.createdBy}` : '';
-      document.getElementById('matInfo').textContent = `字数: ${m.charCount}${creator} | ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
+      const audioInfo = m.audioUrl ? ` | 🎵 音频: ${m.audioName||'已有'}` : '';
+      document.getElementById('matInfo').textContent = `字数: ${m.charCount}${creator}${audioInfo} | ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
       document.getElementById('matDeleteBtn').style.display = 'inline-flex';
       document.getElementById('matEditorTitle').textContent = '✏️ 编辑材料';
+      // Audio preview for existing material
+      const preview = document.getElementById('audioPreview');
+      const player = document.getElementById('matAudioPlayer');
+      if (m.audioUrl) {
+        player.src = m.audioUrl;
+        preview.style.display = '';
+      } else {
+        preview.style.display = 'none';
+      }
     } else {
       this.matClear();
     }
@@ -959,6 +972,8 @@ const app = {
     document.getElementById('matDeleteBtn').style.display = 'none';
     document.getElementById('saveGenBtn').style.display = 'none';
     document.getElementById('uploadStatus').textContent = '';
+    document.getElementById('audioPreview').style.display = 'none';
+    document.getElementById('matAudioPlayer').src = '';
     document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
     this.renderMatList();
   },
@@ -1011,10 +1026,16 @@ const app = {
       const result = await res.json();
       if (result.success) {
         if (result.fileType === 'audio') {
-          // Store audio info for later save
           this._uploadedAudio = { url: result.fileUrl, name: result.fileName };
-          document.getElementById('matInfo').textContent = '已上传音频: ' + result.fileName + ' | 请填写标题后保存';
+          document.getElementById('matTitle').value = file.name.replace(/\.[^.]+$/, '');
+          document.getElementById('matContent').value = '(音频练习)';
+          document.getElementById('matInfo').textContent = '音频: ' + result.fileName + ' | 请点击保存';
           status.textContent = '✅ 音频已就绪';
+          // Show audio preview
+          const preview = document.getElementById('audioPreview');
+          const player = document.getElementById('matAudioPlayer');
+          player.src = result.fileUrl;
+          preview.style.display = '';
         } else {
           // Word/text - fill content
           document.getElementById('matContent').value = result.extractedText;
@@ -1300,7 +1321,6 @@ const app = {
     if (!this.isPracticing) this.startPractice();
     if (this.hasAudio()) {
       const audio = document.getElementById('audioPlayer');
-      audio.playbackRate = this.ttsRate();
       audio.currentTime = 0;
       audio.play().catch(e => { this.toast('⚠️','音频播放失败'); this.isPlaying=false; });
     } else if (this.speechSupported) {
