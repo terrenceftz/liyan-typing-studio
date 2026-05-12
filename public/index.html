@@ -481,14 +481,14 @@ input[type="range"]::-moz-range-thumb {
     </div>
   </div>
 
-  <!-- ─── Materials View ─── -->
+  <!-- Materials View -->
   <div id="view-materials" class="view p-4 max-w-5xl mx-auto">
-    <div class="flex gap-4 flex-wrap md:flex-nowrap">
+    <div class="flex gap-5 flex-wrap md:flex-nowrap">
       <!-- Material List -->
-      <div class="card p-4 w-full md:w-[300px] flex-shrink-0">
+      <div class="card p-4 w-full md:w-[280px] flex-shrink-0">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-base font-bold" style="color:var(--lavender-dark)">📋 材料列表</h2>
-          <button class="btn-secondary text-xs" onclick="app.matClear()">🆕 新建</button>
+          <h2 class="section-title-sm">📋 材料列表</h2>
+          <button class="btn-ghost text-xs" onclick="app.matClear()">+ 新建</button>
         </div>
         <div id="matList" class="flex flex-col gap-1" style="max-height:500px; overflow-y:auto">
           <div style="color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">暂无材料，点击"新建"创建</div>
@@ -496,46 +496,46 @@ input[type="range"]::-moz-range-thumb {
       </div>
       <!-- Editor -->
       <div class="card p-5 flex-1">
-        <h2 class="text-base font-bold mb-3" style="color:var(--lavender-dark)" id="matEditorTitle">📝 编辑材料</h2>
-        <input id="matTitle" class="w-full p-2 rounded-lg border mb-3 text-sm" style="border-color:var(--lavender-light); outline:none" placeholder="材料标题">
+        <h2 class="section-title-sm mb-3" id="matEditorTitle">📝 编辑材料</h2>
+        <input id="matTitle" class="input-sm w-full mb-3" placeholder="材料标题">
         <!-- File Upload -->
-        <div class="p-3 rounded-lg mb-3" style="background:var(--lavender-light)">
+        <div class="p-4 rounded-lg mb-3" style="background:var(--soft-bg2);border:1px solid var(--border)">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">📎 上传文件</span>
+            <span class="text-xs font-bold" style="color:var(--text);white-space:nowrap">📎 上传文件</span>
             <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a,.aac,.docx,.txt" onchange="app.uploadFile()"
               class="text-xs" style="max-width:220px">
             <span id="uploadStatus" class="text-xs" style="color:var(--text-secondary)"></span>
           </div>
-          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">支持音频(mp3/wav)、Word(.docx)、文本(.txt) 文件</p>
+          <p class="text-xs mt-2" style="color:var(--text-secondary)">支持音频(mp3/wav)、Word(.docx)、文本(.txt) 文件</p>
           <!-- Remote Audio URL -->
-          <div class="flex items-center gap-2 flex-wrap mt-2" style="padding-top:8px;border-top:1px dashed #d4cde8">
-            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">🔗 远程链接</span>
-            <input id="audioUrlInput" class="p-1 rounded border text-xs flex-1" style="border-color:var(--lavender-light);outline:none;min-width:200px" placeholder="粘贴音频直链 URL (mp3/wav等)">
-            <button class="btn-secondary text-xs" onclick="app.saveAudioLink()" style="padding:4px 10px;white-space:nowrap">💾 保存链接</button>
+          <div class="flex items-center gap-2 flex-wrap mt-3 pt-3" style="border-top:1px dashed var(--border)">
+            <span class="text-xs font-bold" style="color:var(--text);white-space:nowrap">🔗 远程链接</span>
+            <input id="audioUrlInput" class="input-sm flex-1" style="min-width:200px" placeholder="粘贴音频直链 URL (mp3/wav等)">
+            <button class="btn-secondary text-xs" onclick="app.saveAudioLink()">保存链接</button>
           </div>
-          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">远程链接直接引用，无需上传文件</p>
+          <p class="text-xs mt-1" style="color:var(--text-secondary)">远程链接直接引用，无需上传文件</p>
           <div id="audioPreview" style="display:none;margin-top:8px">
             <audio id="matAudioPlayer" controls style="width:100%;max-width:400px"></audio>
           </div>
         </div>
 
         <!-- Auto-generate -->
-        <div class="p-3 rounded-lg mb-3" style="background:var(--lavender-light)">
+        <div class="p-4 rounded-lg mb-3" style="background:var(--soft-bg2);border:1px solid var(--border)">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">🤖 自动生成</span>
+            <span class="text-xs font-bold" style="color:var(--text);white-space:nowrap">🤖 自动生成</span>
             <input id="genWordCount" type="number" min="50" max="20000" step="50" value="300"
-              class="p-1 rounded border text-xs" style="width:80px;border-color:var(--lavender-accent);outline:none;text-align:center">
+              class="input-sm" style="width:80px;text-align:center">
             <span class="text-xs" style="color:var(--text-secondary)">字</span>
-            <button class="btn-secondary text-xs" onclick="app.generateMaterial()" style="padding:5px 12px">✨ 生成</button>
-            <button class="btn-primary text-xs" id="saveGenBtn" onclick="app.saveGenerated()" style="display:none;padding:5px 12px">💾 保存生成材料</button>
+            <button class="btn-secondary text-xs" onclick="app.generateMaterial()">✨ 生成</button>
+            <button class="btn-primary text-xs" id="saveGenBtn" onclick="app.saveGenerated()" style="display:none">💾 保存生成材料</button>
           </div>
-          <p class="text-xs mt-1" style="color:var(--text-secondary); margin:4px 0 0">随机生成法院相关练习材料，可设字数</p>
+          <p class="text-xs mt-2" style="color:var(--text-secondary)">随机生成法院相关练习材料，可设字数</p>
         </div>
-        <textarea id="matContent" class="w-full p-3 rounded-lg border mb-3 text-sm" style="border-color:var(--lavender-light); min-height:250px; resize:vertical; outline:none" placeholder="在此粘贴考试材料内容..."></textarea>
+        <textarea id="matContent" class="w-full p-3 rounded-lg border mb-3 text-sm" style="border-color:var(--border); min-height:250px; resize:vertical; outline:none; border-radius:var(--radius); transition:border-color 0.3s" placeholder="在此粘贴考试材料内容..."></textarea>
         <div class="flex items-center justify-between">
           <span id="matInfo" class="text-xs" style="color:var(--text-secondary)"></span>
           <div class="flex gap-2">
-            <button class="btn-secondary text-sm" id="matDeleteBtn" style="display:none" onclick="app.deleteMaterial()">🗑️ 删除</button>
+            <button class="btn-ghost btn-ghost-danger text-sm" id="matDeleteBtn" style="display:none" onclick="app.deleteMaterial()">🗑️ 删除</button>
             <button class="btn-primary text-sm" onclick="app.saveMaterial()">💾 保存</button>
           </div>
         </div>
