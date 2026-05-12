@@ -627,30 +627,30 @@ input[type="range"]::-moz-range-thumb {
 
     <!-- Stats Bar -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:16px">
-      <div class="card px-4 py-2 text-center">
-        <div class="stat-value" style="font-size:22px" id="wpmDisplay">0</div>
+      <div class="card px-4 py-3 text-center">
+        <div class="stat-value" id="wpmDisplay">0</div>
         <div class="stat-label">WPM</div>
       </div>
-      <div class="card px-4 py-2 text-center">
-        <div class="stat-value" style="font-size:22px" id="accuracyDisplay">--</div>
+      <div class="card px-4 py-3 text-center">
+        <div class="stat-value" id="accuracyDisplay">--</div>
         <div class="stat-label">正确率</div>
       </div>
-      <div class="card px-4 py-2 text-center" id="timerCard">
-        <div class="stat-value" style="font-size:22px;transition:color 0.5s" id="elapsedDisplay">00:00</div>
+      <div class="card px-4 py-3 text-center" id="timerCard">
+        <div class="stat-value" style="transition:color 0.5s" id="elapsedDisplay">00:00</div>
         <div class="stat-label" id="timerLabel">用时</div>
       </div>
-      <div class="card px-4 py-2 text-center">
-        <div class="stat-value" style="font-size:22px" id="charCountDisplay">0</div>
+      <div class="card px-4 py-3 text-center">
+        <div class="stat-value" id="charCountDisplay">0</div>
         <div class="stat-label">已输入</div>
       </div>
     </div>
 
     <!-- Typing Area -->
-    <div class="card p-4">
+    <div class="card p-5">
       <textarea id="typingInput" aria-label="听打输入区" placeholder="选择材料后，点击 ▶️ 或按空格键开始听打练习..." oninput="app.onTyping()" onpaste="app.onTyping()"></textarea>
       <div class="flex justify-between items-center mt-2">
         <span class="text-xs" style="color:var(--text-secondary)">
-          按 <kbd style="background:var(--lavender-light);color:var(--lavender-accent);padding:1px 5px;border-radius:3px;font-weight:700">空格</kbd> 暂停 | <kbd style="background:var(--lavender-light);color:var(--lavender-accent);padding:1px 5px;border-radius:3px;font-weight:700">Ctrl+空格</kbd> 输入时暂停
+          按 <kbd style="background:var(--soft-bg);color:var(--accent);padding:1px 6px;border-radius:4px;font-weight:700;border:1px solid var(--border)">空格</kbd> 暂停 | <kbd style="background:var(--soft-bg);color:var(--accent);padding:1px 6px;border-radius:4px;font-weight:700;border:1px solid var(--border)">Ctrl+空格</kbd> 输入时暂停
         </span>
         <button class="btn-primary text-sm" onclick="app.finishPractice()">🏁 结束练习</button>
       </div>
