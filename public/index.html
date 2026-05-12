@@ -1782,6 +1782,120 @@ const app = {
     if (this.fingerLevel) this.fingerStartLevel(this.fingerLevel);
   },
 
+  fingerBuiltinTexts: [
+    { id: 'builtin_1', title: '高频偏旁部首', content: '的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取据处队南给色光门即保治北造百规热领七海口东导器压志世金增争济阶油思术极交受联什认六共权收证改清己美再采转更单风切打白教速花带安场身车例真务具万每目至达走积示议声报斗完类八离华名确才科张信马节话米整空元况今集温传土许步群广石记需段研界拉林律叫且究观越织装影算低持音众书布复容儿须际商非验连断深难近矿千周委素技备半办青省列习响约支般史感劳便团往酸历市克何除消构府称太准精值号率族维划选标写存候毛亲快效斯院查江型眼王按格养易置派层片始却专状育厂京识适属圆包火住调满县局照参红细引听该铁价严龙飞' },
+    { id: 'builtin_2', title: '数字日期练习', content: '2024年12月31日，案件受理号为（2024）京01民初第1889号。涉及金额人民币1238.56万元，占总标的75.3%。原告住所地为北京市朝阳区建国路88号SOHO现代城3号楼1502室，邮编100022。被告于2023年6月15日签订的第7份补充协议第3条第2款约定，违约金按日万分之五计算，自2022年11月1日起至实际履行之日止，暂计至2024年6月30日共608天。本院于2024年1月8日立案后，依法适用普通程序，分别于2024年3月20日、5月15日、9月28日公开开庭进行了审理。本案现已审理终结，判决如下：一、被告于本判决生效之日起15日内支付原告货款865.42万元及利息（以865.42万元为基数，自2023年1月1日起按年利率4.35%计算至实际清偿之日止）。二、驳回原告其他诉讼请求。案件受理费72490元，由原告负担22490元，被告负担50000元。如不服本判决，可在判决书送达之日起15日内向本院递交上诉状，并按对方当事人人数提出副本，上诉于北京市高级人民法院。' },
+    { id: 'builtin_3', title: '标点符号练习', content: '《中华人民共和国民法典》第一千零四条规定："自然人享有健康权。自然人的身心健康受法律保护。任何组织或者个人不得侵害他人的健康权。"最高人民法院《关于适用〈中华人民共和国民法典〉合同编通则若干问题的解释》（法释〔2023〕12号）第一条指出："人民法院依据民法典第一百四十二条第一款、第四百六十六条第一款的规定对合同条款进行解释时，应当以通常理解为基础，结合合同的性质和目的、交易习惯以及诚实信用原则，确定合同条款的真实意思。"原告主张：（1）被告构成根本违约；（2）合同应予解除；（3）被告应赔偿损失。被告辩称：第一，原告未履行通知义务；第二，损失计算缺乏依据；第三，原告自身存在过错。法院认为：本案的争议焦点是——合同是否有效？违约行为是否存在？损失数额如何确定？' },
+    { id: 'builtin_4', title: '法院术语缩写', content: '原告（以下简称YG）与被告（以下简称BG）于2022年1月1日签订了编号为No.HT2022-0889的《钢材买卖合同》。该合同约定：BG向YG购买HRB400E螺纹钢5000吨，单价为CNY 3850元/吨，总金额为RMB 1925万元整。交货地点为YG指定的工地：北京市朝阳区CBD核心区Z-12地块项目施工现场。质量标准执行GB/T 1499.2-2018。验收方式为：由监理单位（JL-2022-0156号监理合同项下）依据图纸（图号JZ-01至JZ-88）和SGS检测报告进行抽检。2019-nCoV疫情期间，BG以不可抗力（Force Majeure）为由，通过E-mail（地址：legal@bg-steel.com.cn）向YG发送了延期交货通知（文号：BG-FY-2022-001）。YG回函称：不同意延期，要求严格履行合同，否则将申请仲裁（Arbitration），适用CIETAC仲裁规则，仲裁地为北京。' },
+    { id: 'builtin_5', title: '身份证号+案号', content: '申请人张三，男，1985年7月23日出生，汉族，公民身份号码110101198507230018，住北京市海淀区中关村南大街5号院12号楼3单元401室。联系电话：13801001234。被申请人李四，女，1990年12月5日出生，汉族，公民身份号码320106199012052820，住上海市浦东新区陆家嘴环路958号2201室。案由：民间借贷纠纷，案号：（2024）沪0115民初25678号。原审法院：（2023）沪0115民初12345号民事判决书已于2024年1月15日生效。再审申请审查期间，申请人提交了新证据：招商银行转账凭证（账号6214830109876543，金额200万元，交易流水号CMB2024010800001）、微信聊天记录截图（微信号zhang_san_1985，共计136页）。本院于2024年9月1日作出（2024）沪民申567号民事裁定书，裁定提审本案。再审案号：（2024）沪民再890号。' },
+  ],
+
+  async fingerLoadPara() {
+    const sel = document.getElementById('fingerParaSelect');
+    sel.innerHTML = '<option value="">-- 选择练习文本 --</option>' +
+      this.fingerBuiltinTexts.map(t => `<option value="${t.id}">📄 ${t.title} (${t.content.length}字)</option>`).join('');
+    document.getElementById('fingerParaRef').innerHTML = '<span style="color:var(--text-secondary)">👆 请选择练习文本</span>';
+    document.getElementById('fingerParaInput').value = '';
+    document.getElementById('fingerParaInput').disabled = false;
+    this.renderKeyboard('fingerParaKeyboard', null);
+  },
+
+  fingerParaSelect(id) {
+    const text = this.fingerBuiltinTexts.find(t => t.id === id);
+    if (!text) { this.fingerParaReset(); return; }
+    window._fingerParaText = text;
+    const chars = [...text.content];
+    document.getElementById('fingerParaRef').innerHTML = chars.map(c => `<span class="char-pending">${this.esc(c)}</span>`).join('');
+    document.getElementById('fingerParaInput').value = '';
+    document.getElementById('fingerParaInput').disabled = false;
+    document.getElementById('fingerParaInput').focus();
+    this._fingerParaCorrect = 0;
+    this._fingerParaErrors = 0;
+    this._fingerParaStart = Date.now();
+    this.renderKeyboard('fingerParaKeyboard', null);
+  },
+
+  fingerParaTyping() {
+    if (!window._fingerParaText) return;
+    const text = window._fingerParaText;
+    const input = document.getElementById('fingerParaInput').value;
+    const inputChars = [...input];
+    const refChars = [...text.content];
+    const isPunct = ch => /^[\s\p{P}\p{S}]$/u.test(ch);
+    let correct = 0, errors = 0;
+    const spans = document.getElementById('fingerParaRef').querySelectorAll('span');
+    let currentKey = null;
+    for (let i = 0; i < Math.min(inputChars.length, refChars.length); i++) {
+      if (isPunct(refChars[i])) { spans[i].className = 'char-correct'; continue; }
+      if (inputChars[i] === refChars[i]) {
+        spans[i].className = 'char-correct';
+        correct++;
+      } else {
+        spans[i].className = 'char-error';
+        errors++;
+      }
+      if (i === inputChars.length - 1 && i + 1 < refChars.length) {
+        currentKey = refChars[i + 1];
+      }
+    }
+    if (inputChars.length < refChars.length && inputChars.length > 0) {
+      spans[inputChars.length].className = 'char-cursor';
+    }
+    for (let i = inputChars.length + 1; i < spans.length; i++) {
+      spans[i].className = 'char-pending';
+    }
+    this._fingerParaCorrect = correct;
+    this._fingerParaErrors = errors;
+    const total = correct + errors;
+    const elapsed = (Date.now() - this._fingerParaStart) / 1000;
+    const wpm = elapsed > 0.05 ? Math.round(correct / (elapsed / 60)) : 0;
+    const acc = total > 0 ? Math.round((correct / total) * 100) : 100;
+    document.getElementById('fingerParaWPM').textContent = wpm;
+    document.getElementById('fingerParaAcc').textContent = acc + '%';
+    document.getElementById('fingerParaChars').textContent = inputChars.length;
+    if (currentKey) this.renderKeyboard('fingerParaKeyboard', currentKey);
+    this._updateFingerParaStats();
+  },
+
+  _updateFingerParaStats() {
+    const container = document.getElementById('fingerParaStats');
+    if (!container) return;
+    const fingers = ['leftPinky','leftRing','leftMiddle','leftIndex','rightIndex','rightMiddle','rightRing','rightPinky','thumbs'];
+    const maxHits = Math.max(1, ...fingers.map(f => this.fingerStats[f].hits || 0));
+    container.innerHTML = fingers.map(f => {
+      const s = this.fingerStats[f];
+      const pct = Math.round(((s.hits || 0) / maxHits) * 100);
+      const total = (s.hits || 0) + (s.errors || 0);
+      const errRate = total > 0 ? Math.round(((s.errors || 0) / total) * 100) : 0;
+      return `<div class="mb-2">
+        <div class="flex justify-between text-xs mb-1">
+          <span style="color:var(--text)">${this.fingerNames[f]}</span>
+          <span style="color:var(--text-secondary)">${s.hits || 0} 击 | ${errRate}% 错</span>
+        </div>
+        <div class="progress-bar" style="height:6px">
+          <div class="finger-stat-bar" style="width:${pct}%;background:${this._fingerColorVal(f)}"></div>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  _fingerColorVal(f) {
+    const map = { leftPinky: '#c4b5fd', leftRing: '#93c5fd', leftMiddle: '#86efac', leftIndex: '#fdba74', rightIndex: '#fb923c', rightMiddle: '#86efac', rightRing: '#93c5fd', rightPinky: '#c4b5fd' };
+    return map[f] || '#e8ddd8';
+  },
+
+  fingerParaReset() {
+    document.getElementById('fingerParaRef').innerHTML = '<span style="color:var(--text-secondary)">👆 请选择练习文本</span>';
+    document.getElementById('fingerParaInput').value = '';
+    document.getElementById('fingerParaWPM').textContent = '0';
+    document.getElementById('fingerParaAcc').textContent = '--';
+    document.getElementById('fingerParaChars').textContent = '0';
+    document.getElementById('fingerParaStats').innerHTML = '';
+    document.getElementById('fingerParaSelect').value = '';
+    window._fingerParaText = null;
+    this.renderKeyboard('fingerParaKeyboard', null);
+  },
+
   updateReferenceHighlight() {
     if (!this.activeMaterial) return;
     const chars=[...this.activeMaterial.content];
