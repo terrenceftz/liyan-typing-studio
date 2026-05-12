@@ -1440,15 +1440,22 @@ const app = {
   onTyping() {
     if (!this.isPracticing||!this.activeMaterial) return;
     const input=document.getElementById('typingInput').value;
-    const refChars=[...this.activeMaterial.content];
     const inputChars=[...input];
+    if (this.hasAudio() && this.activeMaterial.content.match(/^[\(（]音频练习[\)）]|[\(（]远程音频练习[\)）]/)) {
+      // Audio mode with placeholder content: count all chars as correct, manual submit only
+      this.correctChars=inputChars.length; this.incorrectChars=0;
+      document.getElementById('readCount').textContent=inputChars.length;
+      this.updateStats();
+      return;
+    }
+    const refChars=[...this.activeMaterial.content];
     this.correctChars=0; this.incorrectChars=0;
     for (let i=0;i<inputChars.length;i++) {
       if (i<refChars.length&&inputChars[i]===refChars[i]) this.correctChars++;
       else this.incorrectChars++;
     }
     this.updateReferenceHighlight(); this.updateStats();
-    if (inputChars.length>=refChars.length&&refChars.length>0) setTimeout(()=>this.finishPractice(),500);
+    if (!this.hasAudio() && inputChars.length>=refChars.length&&refChars.length>0) setTimeout(()=>this.finishPractice(),500);
   },
 
   // Timer
