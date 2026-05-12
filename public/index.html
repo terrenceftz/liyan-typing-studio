@@ -876,6 +876,50 @@ const app = {
   examTimeRemaining: 0,
   examSubmitted: false,
 
+  // Fingering data
+  fingerMode: 'basic',
+  fingerLevel: null,
+  fingerSequence: [],
+  fingerSeqIndex: 0,
+  fingerCorrect: 0,
+  fingerErrors: 0,
+  fingerStartTime: null,
+  fingerTimer: null,
+  fingerKeyMap: {
+    leftPinky: ['1','`','q','a','z','Tab','Caps','Shift'],
+    leftRing: ['2','w','s','x'],
+    leftMiddle: ['3','e','d','c'],
+    leftIndex: ['4','5','r','f','v','t','g','b'],
+    rightIndex: ['6','7','y','h','n','u','j','m'],
+    rightMiddle: ['8','i','k',','],
+    rightRing: ['9','o','l','.'],
+    rightPinky: ['0','-','=','p','[',']','\\',';','\'','/','Enter','Backspace'],
+    thumbs: [' '],
+  },
+  fingerColors: {
+    leftPinky: 'f-pinky', leftRing: 'f-ring', leftMiddle: 'f-middle',
+    leftIndex: 'f-index-l', rightIndex: 'f-index-r',
+    rightMiddle: 'f-middle', rightRing: 'f-ring',
+    rightPinky: 'f-pinky', thumbs: 'f-thumb',
+  },
+  fingerNames: {
+    leftPinky: '左小指', leftRing: '左无名指', leftMiddle: '左中指',
+    leftIndex: '左食指', rightIndex: '右食指',
+    rightMiddle: '右中指', rightRing: '右无名指',
+    rightPinky: '右小指', thumbs: '拇指',
+  },
+  fingerStats: {
+    leftPinky: { hits: 0, errors: 0 },
+    leftRing: { hits: 0, errors: 0 },
+    leftMiddle: { hits: 0, errors: 0 },
+    leftIndex: { hits: 0, errors: 0 },
+    rightIndex: { hits: 0, errors: 0 },
+    rightMiddle: { hits: 0, errors: 0 },
+    rightRing: { hits: 0, errors: 0 },
+    rightPinky: { hits: 0, errors: 0 },
+    thumbs: { hits: 0, errors: 0 },
+  },
+
   // ─── Init ───
   async init() {
     if (!this.speechSupported) console.warn('Web Speech API not supported');
@@ -1520,6 +1564,58 @@ const app = {
     document.getElementById('readCount').textContent='0';
   },
   esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; },
+
+  getFingerForKey(key) {
+    const k = key.toLowerCase();
+    for (const [finger, keys] of Object.entries(this.fingerKeyMap)) {
+      if (keys.some(k2 => k2.toLowerCase() === k)) return finger;
+    }
+    return null;
+  },
+
+  renderKeyboard(containerId, targetKey) {
+    const rows = [
+      ['`','1','2','3','4','5','6','7','8','9','0','-','=','Backspace'],
+      ['Tab','q','w','e','r','t','y','u','i','o','p','[',']','\\'],
+      ['Caps','a','s','d','f','g','h','j','k','l',';','\'','Enter'],
+      ['Shift','z','x','c','v','b','n','m',',','.','/','Shift'],
+      ['Space'],
+    ];
+    const specialClass = {
+      'Backspace': 'lg', 'Tab': 'lg', 'Caps': 'lg', 'Enter': 'lg',
+      'Shift': 'lg', 'Space': 'xl',
+    };
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    let html = '<div class="keyboard">';
+    for (const row of rows) {
+      html += '<div class="keyboard-row">';
+      for (const key of row) {
+        const finger = this.getFingerForKey(key);
+        const cls = finger ? this.fingerColors[finger] : 'f-thumb';
+        const size = specialClass[key] || '';
+        const label = key === 'Space' ? '␣' : key;
+        const targetClass = (targetKey && key.toLowerCase() === targetKey.toLowerCase()) ? ' target' : '';
+        html += `<div class="key-key ${cls} ${size}${targetClass}" data-key="${key.toLowerCase()}">${label}</div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  },
+
+  highlightKey(containerId, key, cls) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('.key-key').forEach(el => {
+      if (el.dataset.key === key.toLowerCase()) {
+        el.classList.add(cls);
+        if (cls === 'miss' || cls === 'hit') {
+          setTimeout(() => el.classList.remove(cls), 300);
+        }
+      }
+    });
+  },
 
   updateReferenceHighlight() {
     if (!this.activeMaterial) return;
