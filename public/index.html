@@ -335,6 +335,47 @@ input[type="range"]::-moz-range-thumb {
 
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
 
+/* Fingering keyboard */
+.keyboard { display: flex; flex-direction: column; gap: 4px; align-items: center; user-select: none; }
+.keyboard-row { display: flex; gap: 3px; }
+.key-key {
+  min-width: 40px; height: 42px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: #fff;
+  transition: all 0.15s; cursor: default; position: relative;
+}
+.key-key.sm { min-width: 30px; font-size: 10px; }
+.key-key.lg { min-width: 56px; }
+.key-key.xl { min-width: 200px; }
+.key-key.f-pinky { background: #c4b5fd; }
+.key-key.f-ring { background: #93c5fd; }
+.key-key.f-middle { background: #86efac; color: #166534; }
+.key-key.f-index-l { background: #fdba74; }
+.key-key.f-index-r { background: #fb923c; }
+.key-key.f-thumb { background: #e8ddd8; color: var(--text); }
+.key-key.target {
+  box-shadow: 0 0 0 3px #fff, 0 0 14px 3px rgba(249,114,110,0.6);
+  transform: scale(1.08); z-index: 2;
+  animation: keyPulse 0.8s ease-in-out infinite;
+}
+@keyframes keyPulse {
+  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 14px 3px rgba(249,114,110,0.6); }
+  50% { box-shadow: 0 0 0 5px #fff, 0 0 22px 6px rgba(249,114,110,0.85); }
+}
+.key-key.hit { background: #22c55e !important; transition: background 0.15s; }
+.key-key.miss { background: #ef4444 !important; animation: shake 0.3s ease; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.finger-stat-bar { height: 8px; border-radius: 4px; transition: width 0.3s; }
+.level-card { cursor: pointer; transition: all 0.2s; }
+.level-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.level-card.locked { opacity: 0.5; cursor: not-allowed; }
+.level-card.locked:hover { transform: none; box-shadow: var(--shadow-sm); }
+.level-card.completed { border: 2px solid #22c55e; }
+
 @media (max-width: 768px) {
   .calendar-day { font-size: 12px; }
   .btn-cta { padding: 14px 28px; font-size: 17px; }
@@ -580,6 +621,77 @@ input[type="range"]::-moz-range-thumb {
     </div>
   </div>
 
+  <!-- Fingering View -->
+  <div id="view-fingering" class="view p-4 max-w-5xl mx-auto">
+    <!-- Mode Tabs -->
+    <div class="flex items-center gap-2 mb-4">
+      <button id="fingerModeBasic" class="nav-link active" onclick="app.fingerSetMode('basic')">⌨️ 基础键位</button>
+      <button id="fingerModePara" class="nav-link" onclick="app.fingerSetMode('para')">📝 段落练习</button>
+    </div>
+
+    <!-- Basic Mode -->
+    <div id="fingerBasicPanel">
+      <!-- Level Selection -->
+      <div class="card p-4 mb-4">
+        <h2 class="section-title-sm mb-3">🎯 选择关卡</h2>
+        <div id="fingerLevels" class="grid grid-cols-5 gap-3"></div>
+      </div>
+      <!-- Practice Area -->
+      <div id="fingerBasicPractice" style="display:none">
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px">
+          <div class="card p-5 text-center" style="flex:2; min-width:280px">
+            <div id="fingerTargetChar" style="font-size:72px;font-weight:700;color:var(--text);transition:color 0.2s">A</div>
+            <p class="text-xs mt-2" style="color:var(--text-secondary)">按下键盘上高亮的键</p>
+            <div id="fingerProgressText" class="text-sm mt-2" style="color:var(--text-secondary)">0 / 0</div>
+          </div>
+          <div class="card p-4" style="flex:1; min-width:160px">
+            <div class="stat-value" id="fingerBasicWPM">0</div>
+            <div class="stat-label">WPM</div>
+            <div class="stat-value mt-2" id="fingerBasicAcc">--</div>
+            <div class="stat-label">正确率</div>
+            <div class="stat-value mt-2" id="fingerBasicTime">00:00</div>
+            <div class="stat-label">用时</div>
+          </div>
+        </div>
+        <div class="card p-4 mb-3">
+          <div id="fingerKeyboard"></div>
+        </div>
+        <div class="flex gap-2 justify-center">
+          <button class="btn-secondary" onclick="app.fingerBasicBack()">↩ 返回选关</button>
+          <button class="btn-primary" onclick="app.fingerBasicRestart()">🔄 重练</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paragraph Mode -->
+    <div id="fingerParaPanel" style="display:none">
+      <div class="card px-5 py-3 mb-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <select id="fingerParaSelect" class="input-sm" style="min-width:200px" onchange="app.fingerParaSelect(this.value)">
+            <option value="">-- 选择练习文本 --</option>
+          </select>
+          <button class="btn-secondary text-sm" onclick="app.fingerParaReset()">🔄 重置</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px">
+        <div class="card p-4" style="flex:1; min-width:280px">
+          <div id="fingerParaRef" style="font-size:18px;line-height:2;letter-spacing:0.05em;padding:16px;border-radius:var(--radius);background:#fffefd;border:1px solid var(--border);min-height:80px;word-break:break-all"></div>
+          <textarea id="fingerParaInput" class="w-full p-3 rounded-lg border mt-3" style="border-color:var(--border);min-height:120px;resize:vertical;outline:none;font-size:16px;line-height:2;border-radius:var(--radius)" placeholder="在此输入..." oninput="app.fingerParaTyping()"></textarea>
+        </div>
+        <div class="card p-4" style="flex:0 0 220px">
+          <div class="stat-value" id="fingerParaWPM">0</div><div class="stat-label mb-2">WPM</div>
+          <div class="stat-value" id="fingerParaAcc">--</div><div class="stat-label mb-2">正确率</div>
+          <div class="stat-value" id="fingerParaChars">0</div><div class="stat-label mb-3">已输入</div>
+          <div class="section-title-sm mb-2">✋ 手指统计</div>
+          <div id="fingerParaStats"></div>
+        </div>
+      </div>
+      <div class="card p-4 mb-3">
+        <div id="fingerParaKeyboard"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Practice View -->
   <div id="view-practice" class="view p-4 max-w-5xl mx-auto">
     <!-- Mode Toggle + Control Bar -->
@@ -739,7 +851,7 @@ const app = {
   startTime: null, elapsedBeforePause: 0, pauseStart: null, timerInterval: null,
   currentCharIndex: 0, correctChars: 0, incorrectChars: 0,
   materials: [], activeMaterial: null,
-  settings: { speed: 140, dailyGoal: 1000, hideReference: false },
+  settings: { speed: 140, dailyGoal: 1000, hideReference: true },
   stats: { streak: 0, todayChars: 0, dailyGoal: 1000, todayPercent: 0, achievements: [] },
   token: null, isAdmin: false,
   currentView: 'welcome',
@@ -1326,7 +1438,7 @@ const app = {
     const settings = await this.api('/api/settings');
     if (settings) {
       this.settings.speed = settings.speed||140;
-      this.settings.hideReference = settings.hideReference||false;
+      this.settings.hideReference = settings.hideReference ?? true;
       document.getElementById('speedSlider').value = this.settings.speed;
       document.getElementById('hideRefCheck').checked = this.settings.hideReference;
       this.updateSpeedUI();
