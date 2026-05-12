@@ -428,6 +428,17 @@
       <div class="card p-5 flex-1">
         <h2 class="text-base font-bold mb-3" style="color:var(--lavender-dark)" id="matEditorTitle">📝 编辑材料</h2>
         <input id="matTitle" class="w-full p-2 rounded-lg border mb-3 text-sm" style="border-color:var(--lavender-light); outline:none" placeholder="材料标题">
+        <!-- File Upload -->
+        <div class="p-3 rounded-lg mb-3" style="background:var(--lavender-light)">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold" style="color:var(--lavender-dark);white-space:nowrap">📎 上传文件</span>
+            <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a,.aac,.docx,.txt" onchange="app.uploadFile()"
+              class="text-xs" style="max-width:220px">
+            <span id="uploadStatus" class="text-xs" style="color:var(--text-secondary)"></span>
+          </div>
+          <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">支持音频(mp3/wav)和Word(.docx)文件，音频可直接用于听打</p>
+        </div>
+
         <!-- Auto-generate -->
         <div class="p-3 rounded-lg mb-3" style="background:var(--lavender-light)">
           <div class="flex items-center gap-2 flex-wrap">
@@ -486,9 +497,9 @@
           </select>
           <div class="flex items-center gap-2">
             <span class="text-xs" style="color:var(--text-secondary)">语速</span>
-            <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0"
+            <input type="range" id="speedSlider" min="50" max="400" step="10" value="140"
               oninput="app.updateSpeed(this.value)" style="width:100px; --range-fill:33%">
-            <span id="speedLabel" class="text-xs font-bold" style="color:var(--lavender-accent)">1.0x</span>
+            <span id="speedLabel" class="text-xs font-bold" style="color:var(--lavender-accent)">140字/分</span>
           </div>
           <!-- Mode Toggle -->
           <div class="flex rounded-lg overflow-hidden" style="border:2px solid var(--lavender-light)">
@@ -526,6 +537,12 @@
         <span class="text-xs" style="color:var(--text-secondary)">已读: <span id="readCount">0</span> 字</span>
       </div>
       <div id="referenceDisplay" style="font-size:16px">👆 请先在上方选择练习材料，然后点击 ▶️ 开始</div>
+    </div>
+
+    <!-- Audio Player (hidden by default) -->
+    <audio id="audioPlayer" style="display:none" onended="app.onAudioEnded()" onpause="app.onAudioPause()"></audio>
+    <div class="card px-4 py-2 mb-3" id="audioInfo" style="display:none; background:#fffbeb">
+      <span class="text-xs" style="color:#92400e">🎵 当前播放音频文件：<b id="audioFileName"></b></span>
     </div>
 
     <!-- Stats Bar -->
@@ -628,7 +645,7 @@ const app = {
   startTime: null, elapsedBeforePause: 0, pauseStart: null, timerInterval: null,
   currentCharIndex: 0, correctChars: 0, incorrectChars: 0,
   materials: [], activeMaterial: null,
-  settings: { speed: 1.0, dailyGoal: 1000, hideReference: false },
+  settings: { speed: 140, dailyGoal: 1000, hideReference: false },
   stats: { streak: 0, todayChars: 0, dailyGoal: 1000, todayPercent: 0, achievements: [] },
   token: null, isAdmin: false,
   currentView: 'welcome',
@@ -935,11 +952,13 @@ const app = {
 
   matClear() {
     this.editingMaterialId = null;
+    this._uploadedAudio = null;
     document.getElementById('matTitle').value = '';
     document.getElementById('matContent').value = '';
     document.getElementById('matInfo').textContent = '';
     document.getElementById('matDeleteBtn').style.display = 'none';
     document.getElementById('saveGenBtn').style.display = 'none';
+    document.getElementById('uploadStatus').textContent = '';
     document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
     this.renderMatList();
   },
@@ -947,12 +966,19 @@ const app = {
   async saveMaterial() {
     const title = document.getElementById('matTitle').value.trim();
     const content = document.getElementById('matContent').value.trim();
-    if (!content) { this.toast('⚠️','请输入材料内容'); return; }
-    if (this.editingMaterialId) {
-      await this.api(`/api/materials/${this.editingMaterialId}`,{method:'PUT',body:JSON.stringify({title:title||'未命名材料',content})});
-    } else {
-      await this.api('/api/materials',{method:'POST',body:JSON.stringify({title:title||'未命名材料',content})});
+    const hasAudio = !!this._uploadedAudio;
+    if (!content && !hasAudio) { this.toast('⚠️','请输入材料内容或上传音频'); return; }
+    const body = { title: title||'未命名材料', content: content||'(音频练习)' };
+    if (hasAudio) {
+      body.audioUrl = this._uploadedAudio.url;
+      body.audioName = this._uploadedAudio.name;
     }
+    if (this.editingMaterialId) {
+      await this.api(`/api/materials/${this.editingMaterialId}`,{method:'PUT',body:JSON.stringify(body)});
+    } else {
+      await this.api('/api/materials',{method:'POST',body:JSON.stringify(body)});
+    }
+    this._uploadedAudio = null;
     this.toast('✅','材料已保存');
     const data = await this.api('/api/materials');
     if (data) { this.materials = data.materials||[]; }
@@ -967,6 +993,45 @@ const app = {
     const data = await this.api('/api/materials');
     if (data) { this.materials = data.materials||[]; }
     this.matClear();
+  },
+
+  async uploadFile() {
+    const input = document.getElementById('fileInput');
+    const status = document.getElementById('uploadStatus');
+    const file = input.files[0];
+    if (!file) return;
+    status.textContent = '上传中...';
+    status.style.color = 'var(--lavender-accent)';
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const headers = {};
+      if (this.token) headers['Authorization'] = 'Bearer ' + this.token;
+      const res = await fetch('/api/upload', { method: 'POST', headers, body: formData });
+      const result = await res.json();
+      if (result.success) {
+        if (result.fileType === 'audio') {
+          // Store audio info for later save
+          this._uploadedAudio = { url: result.fileUrl, name: result.fileName };
+          document.getElementById('matInfo').textContent = '已上传音频: ' + result.fileName + ' | 请填写标题后保存';
+          status.textContent = '✅ 音频已就绪';
+        } else {
+          // Word/text - fill content
+          document.getElementById('matContent').value = result.extractedText;
+          document.getElementById('matTitle').value = file.name.replace(/\.[^.]+$/, '');
+          document.getElementById('matInfo').textContent = '字数: ' + result.charCount + ' | 已从文件提取';
+          status.textContent = '✅ 已提取 ' + result.charCount + ' 字';
+        }
+        status.style.color = '#22c55e';
+        input.value = '';
+      } else {
+        status.textContent = '❌ ' + (result.error || '上传失败');
+        status.style.color = '#ef4444';
+      }
+    } catch (e) {
+      status.textContent = '❌ 上传失败';
+      status.style.color = '#ef4444';
+    }
   },
 
   generateMaterial() {
@@ -1121,11 +1186,19 @@ const app = {
     if (data.activeId) { sel.value=data.activeId; this.selectPracticeMaterial(data.activeId); }
     const settings = await this.api('/api/settings');
     if (settings) {
-      this.settings.speed = settings.speed||1.0;
+      this.settings.speed = settings.speed||140;
       this.settings.hideReference = settings.hideReference||false;
       document.getElementById('speedSlider').value = this.settings.speed;
       document.getElementById('hideRefCheck').checked = this.settings.hideReference;
       this.updateSpeedUI();
+      // Audio check
+      if (this.activeMaterial && this.activeMaterial.audioUrl) {
+        document.getElementById('audioPlayer').src = this.activeMaterial.audioUrl;
+        document.getElementById('audioFileName').textContent = this.activeMaterial.audioName || '音频文件';
+        document.getElementById('audioInfo').style.display = '';
+      } else {
+        document.getElementById('audioInfo').style.display = 'none';
+      }
       if (this.settings.hideReference) document.getElementById('referenceCard').style.display='none';
     }
     this.bindKeyboard();
@@ -1135,18 +1208,31 @@ const app = {
     if (!id) {
       this.activeMaterial = null;
       document.getElementById('referenceDisplay').innerHTML = '👆 请先在上方选择练习材料，然后点击 ▶️ 开始';
+      document.getElementById('audioInfo').style.display = 'none';
       return;
     }
     const m = this.materials.find(m=>m.id===id);
-    if (m) { this.activeMaterial = m; this.renderReference(); this.resetPractice(); }
+    if (m) {
+      this.activeMaterial = m;
+      if (m.audioUrl) {
+        document.getElementById('audioPlayer').src = m.audioUrl;
+        document.getElementById('audioFileName').textContent = m.audioName || '音频文件';
+        document.getElementById('audioInfo').style.display = '';
+        document.getElementById('referenceDisplay').innerHTML = '🎵 音频听打模式 — ' + this.esc(m.title);
+      } else {
+        document.getElementById('audioInfo').style.display = 'none';
+        this.renderReference();
+      }
+      this.resetPractice();
+    }
   },
 
-  // Speed
+  // Speed (chars per minute)
   updateSpeed(value) {
-    if (value!==undefined) this.settings.speed=parseFloat(value);
+    if (value!==undefined) this.settings.speed=parseInt(value)||140;
     document.getElementById('speedSlider').value=this.settings.speed;
-    document.getElementById('speedLabel').textContent=this.settings.speed.toFixed(1)+'x';
-    const pct=((this.settings.speed-0.5)/1.5)*100;
+    document.getElementById('speedLabel').textContent=this.settings.speed+'字/分';
+    const pct=((this.settings.speed-50)/350)*100;
     document.getElementById('speedSlider').style.setProperty('--range-fill',pct+'%');
     this.api('/api/settings',{method:'PUT',body:JSON.stringify({speed:this.settings.speed})});
   },
@@ -1182,8 +1268,12 @@ const app = {
   },
 
   // Playback
+  ttsRate() { return Math.max(0.5, Math.min(2.0, this.settings.speed / 200)); },
+  hasAudio() { return this.activeMaterial && this.activeMaterial.audioUrl; },
+
   prepareSpeech() {
     if (!this.activeMaterial||!this.speechSupported) return;
+    if (this.hasAudio()) return;
     const text=this.activeMaterial.content;
     this.speechChunks=text.split(/(?<=[。！？；\n])/g).filter(s=>s.trim());
     if (this.speechChunks.length===0) this.speechChunks=[text];
@@ -1193,7 +1283,7 @@ const app = {
     if (!this.speechSupported||!this.isPlaying) return;
     if (this.speechChunkIndex>=this.speechChunks.length) { this.isPlaying=false; document.getElementById('playBtn').textContent='▶️'; return; }
     this.utterance=new SpeechSynthesisUtterance(this.speechChunks[this.speechChunkIndex]);
-    this.utterance.lang='zh-CN'; this.utterance.rate=this.settings.speed;
+    this.utterance.lang='zh-CN'; this.utterance.rate=this.ttsRate();
     this.utterance.onend=()=>{ this.speechChunkIndex++; if(this.isPlaying) this.speakNextChunk(); };
     this.utterance.onerror=(e)=>{
       if (e.error!=='canceled'&&e.error!=='interrupted') { this.speechChunkIndex++; if(this.isPlaying) this.speakNextChunk(); }
@@ -1208,16 +1298,28 @@ const app = {
   startPlayback() {
     this.isPlaying=true; document.getElementById('playBtn').textContent='⏸️';
     if (!this.isPracticing) this.startPractice();
-    if (this.speechSupported) {
+    if (this.hasAudio()) {
+      const audio = document.getElementById('audioPlayer');
+      audio.playbackRate = this.ttsRate();
+      audio.currentTime = 0;
+      audio.play().catch(e => { this.toast('⚠️','音频播放失败'); this.isPlaying=false; });
+    } else if (this.speechSupported) {
       if (this.speechChunkIndex===0||this.speechChunks.length===0) this.prepareSpeech();
       this.speakNextChunk();
     }
   },
   pausePlayback() {
     this.isPlaying=false; document.getElementById('playBtn').textContent='▶️';
-    if (this.speechSupported) window.speechSynthesis.cancel();
+    if (this.hasAudio()) {
+      document.getElementById('audioPlayer').pause();
+    } else if (this.speechSupported) {
+      window.speechSynthesis.cancel();
+    }
     if (this.isPracticing) this.pauseTimer();
   },
+
+  onAudioEnded() { this.isPlaying=false; document.getElementById('playBtn').textContent='▶️'; },
+  onAudioPause() { if (this.isPlaying) this.isPlaying=false; },
 
   // Practice lifecycle
   startPractice() {

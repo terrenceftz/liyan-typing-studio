@@ -4,6 +4,7 @@ data/admin/
 data/ly/
 data/testuser/
 data/*/
+public/uploads/
 .DS_Store
 *.log
 .env

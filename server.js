@@ -2,10 +2,26 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const multer = require('multer');
+const mammoth = require('mammoth');
 
 const app = express();
 const PORT = 3000;
 const DATA_DIR = path.join(__dirname, 'data');
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+
+// Ensure uploads directory exists
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// Multer config
+const storage = multer.diskStorage({
+  destination: UPLOADS_DIR,
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now().toString(36) + crypto.randomBytes(4).toString('hex') + ext);
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 // In-memory token store
 const validTokens = new Map(); // token -> { username, isAdmin, createdAt }
@@ -125,6 +141,43 @@ app.get('/api/auth/check', requireAuth, (req, res) => {
   res.json({ valid: true, username: req.user.username, isAdmin: req.user.isAdmin });
 });
 
+// ----- File Upload API -----
+app.post('/api/upload', requireAuth, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: '请选择文件' });
+  const file = req.file;
+  const fileUrl = '/uploads/' + file.filename;
+  const ext = path.extname(file.originalname).toLowerCase();
+  let extractedText = '';
+  let fileType = '';
+
+  if (['.mp3', '.wav', '.ogg', '.m4a', '.aac'].includes(ext)) {
+    fileType = 'audio';
+  } else if (['.docx'].includes(ext)) {
+    fileType = 'word';
+    try {
+      const result = await mammoth.extractRawText({ path: file.path });
+      extractedText = result.value || '';
+    } catch (e) {
+      return res.status(400).json({ error: 'Word 文件解析失败' });
+    }
+  } else if (['.txt'].includes(ext)) {
+    fileType = 'text';
+    extractedText = fs.readFileSync(file.path, 'utf-8');
+  } else {
+    fs.unlinkSync(file.path);
+    return res.status(400).json({ error: '不支持的文件格式，请上传 mp3/wav/docx/txt' });
+  }
+
+  res.json({
+    success: true,
+    fileName: file.originalname,
+    fileUrl,
+    fileType,
+    extractedText,
+    charCount: [...extractedText].length,
+  });
+});
+
 // ----- User Management API (admin only) -----
 app.get('/api/users', requireAuth, requireAdmin, (_req, res) => {
   const data = getUsers();
@@ -226,13 +279,15 @@ app.get('/api/materials', requireAuth, (_req, res) => {
 });
 
 app.post('/api/materials', requireAuth, (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, audioUrl, audioName } = req.body;
   const data = readJSON(sharedFile('materials.json')) || { materials: [], activeId: null };
   const material = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     title: title || '未命名材料',
     content,
     charCount: [...(content || '')].length,
+    audioUrl: audioUrl || null,
+    audioName: audioName || null,
     createdBy: req.user.username,
     createdAt: new Date().toISOString(),
   };
@@ -244,12 +299,14 @@ app.post('/api/materials', requireAuth, (req, res) => {
 
 app.put('/api/materials/:id', requireAuth, (req, res) => {
   const { id } = req.params;
-  const { title, content } = req.body;
+  const { title, content, audioUrl, audioName } = req.body;
   const data = readJSON(sharedFile('materials.json')) || { materials: [], activeId: null };
   const idx = data.materials.findIndex(m => m.id === id);
   if (idx === -1) return res.status(404).json({ error: '材料未找到' });
   if (title !== undefined) data.materials[idx].title = title;
   if (content !== undefined) { data.materials[idx].content = content; data.materials[idx].charCount = [...content].length; }
+  if (audioUrl !== undefined) data.materials[idx].audioUrl = audioUrl;
+  if (audioName !== undefined) data.materials[idx].audioName = audioName;
   writeJSON(sharedFile('materials.json'), data);
   res.json({ success: true, material: data.materials[idx] });
 });
