@@ -1617,6 +1617,171 @@ const app = {
     });
   },
 
+  fingerLevelDefs: [
+    { id: 1, name: '基准行', keys: 'ASDFJKL;', color: 'var(--accent)' },
+    { id: 2, name: '基准+上排', keys: 'ASDFJKL;QWERUIOP', color: '#fb923c' },
+    { id: 3, name: '基准+下排', keys: 'ASDFJKL;QWERUIOPZXCVM,./', color: '#22c55e' },
+    { id: 4, name: '全字母', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', color: '#3b82f6' },
+    { id: 5, name: '综合', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789，。！？；：、', color: '#8b5cf6' },
+  ],
+
+  generateFingerSeq(keys, len) {
+    len = len || (70 + Math.floor(Math.random() * 60));
+    const arr = [...keys.replace(/\s/g, '')];
+    let seq = '';
+    for (let i = 0; i < len; i++) {
+      seq += arr[Math.floor(Math.random() * arr.length)];
+    }
+    return seq;
+  },
+
+  async fingerSetMode(mode) {
+    this.fingerMode = mode;
+    document.getElementById('fingerModeBasic').className = mode === 'basic' ? 'nav-link active' : 'nav-link';
+    document.getElementById('fingerModePara').className = mode === 'para' ? 'nav-link active' : 'nav-link';
+    document.getElementById('fingerBasicPanel').style.display = mode === 'basic' ? '' : 'none';
+    document.getElementById('fingerParaPanel').style.display = mode === 'para' ? '' : 'none';
+    if (mode === 'basic') this.fingerLoadLevels();
+    if (mode === 'para') this.fingerLoadPara();
+  },
+
+  async fingerLoadLevels() {
+    const data = await this.api('/api/fingering');
+    const levels = (data && data.levels) || {};
+    const container = document.getElementById('fingerLevels');
+    container.innerHTML = this.fingerLevelDefs.map(l => {
+      const saved = levels[String(l.id)] || {};
+      const completed = saved.completed;
+      const prevCompleted = l.id === 1 || (levels[String(l.id - 1)] && levels[String(l.id - 1)].completed);
+      const locked = !prevCompleted && !completed && l.id > 1;
+      const cls = locked ? 'locked' : (completed ? 'completed' : '');
+      return `<div class="card level-card p-3 text-center ${cls}" onclick="${locked ? '' : `app.fingerStartLevel(${l.id})`}">
+        <div style="font-size:24px;font-weight:700;color:${locked ? '#b8aaa4' : l.color}">${saved.bestWPM || '—'}</div>
+        <div class="text-xs mt-1" style="color:var(--text-secondary)">${l.name}</div>
+        <div class="text-xs" style="color:var(--accent)">${completed ? '✅ 已通关' : (locked ? '🔒 未解锁' : '▶ 开始')}</div>
+        ${completed ? `<div class="text-xs mt-1" style="color:var(--text-secondary)">最佳 ${saved.bestAccuracy || 0}%</div>` : ''}
+      </div>`;
+    }).join('');
+  },
+
+  async fingerStartLevel(id) {
+    this.fingerLevel = id;
+    const def = this.fingerLevelDefs.find(l => l.id === id);
+    if (!def) return;
+    this.fingerSequence = [...this.generateFingerSeq(def.keys)];
+    this.fingerSeqIndex = 0;
+    this.fingerCorrect = 0;
+    this.fingerErrors = 0;
+    this.fingerStartTime = Date.now();
+    document.getElementById('fingerBasicPractice').style.display = '';
+    document.getElementById('fingerTargetChar').textContent = this.fingerSequence[0];
+    document.getElementById('fingerTargetChar').style.color = 'var(--text)';
+    document.getElementById('fingerProgressText').textContent = `0 / ${this.fingerSequence.length}`;
+    document.getElementById('fingerBasicWPM').textContent = '0';
+    document.getElementById('fingerBasicAcc').textContent = '--';
+    document.getElementById('fingerBasicTime').textContent = '00:00';
+    this.renderKeyboard('fingerKeyboard', this.fingerSequence[0]);
+    if (this.fingerTimer) clearInterval(this.fingerTimer);
+    this.fingerTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - this.fingerStartTime) / 1000);
+      document.getElementById('fingerBasicTime').textContent = this.formatTime(elapsed);
+    }, 500);
+    document.addEventListener('keydown', this._fingerKeyHandler);
+  },
+
+  _fingerKeyHandler(e) {
+    if (this.fingerMode !== 'basic' || this.fingerLevel === null) return;
+    e.preventDefault();
+    const expected = this.fingerSequence[this.fingerSeqIndex];
+    const pressed = e.key;
+    const finger = this.getFingerForKey(expected);
+    if (pressed === expected) {
+      this.fingerCorrect++;
+      if (finger) this.fingerStats[finger].hits++;
+      document.getElementById('fingerTargetChar').style.color = '#22c55e';
+      this.highlightKey('fingerKeyboard', expected, 'hit');
+      this.fingerSeqIndex++;
+      if (this.fingerSeqIndex >= this.fingerSequence.length) {
+        this.fingerFinishLevel();
+        return;
+      }
+      setTimeout(() => {
+        document.getElementById('fingerTargetChar').textContent = this.fingerSequence[this.fingerSeqIndex];
+        document.getElementById('fingerTargetChar').style.color = 'var(--text)';
+        this.renderKeyboard('fingerKeyboard', this.fingerSequence[this.fingerSeqIndex]);
+      }, 80);
+    } else {
+      this.fingerErrors++;
+      if (finger) this.fingerStats[finger].errors++;
+      document.getElementById('fingerTargetChar').style.color = '#ef4444';
+      this.highlightKey('fingerKeyboard', expected, 'miss');
+      setTimeout(() => {
+        document.getElementById('fingerTargetChar').style.color = 'var(--text)';
+      }, 200);
+    }
+    const total = this.fingerSeqIndex + 1;
+    const minutes = ((Date.now() - this.fingerStartTime) / 1000) / 60;
+    const wpm = minutes > 0 ? Math.round(this.fingerCorrect / minutes) : 0;
+    const acc = this.fingerCorrect + this.fingerErrors > 0
+      ? Math.round((this.fingerCorrect / (this.fingerCorrect + this.fingerErrors)) * 100) : 100;
+    document.getElementById('fingerProgressText').textContent = `${this.fingerSeqIndex} / ${this.fingerSequence.length}`;
+    document.getElementById('fingerBasicWPM').textContent = wpm;
+    document.getElementById('fingerBasicAcc').textContent = acc + '%';
+  },
+
+  async fingerFinishLevel() {
+    document.removeEventListener('keydown', this._fingerKeyHandler);
+    if (this.fingerTimer) clearInterval(this.fingerTimer);
+    const elapsed = Math.floor((Date.now() - this.fingerStartTime) / 1000);
+    const minutes = elapsed / 60;
+    const wpm = minutes > 0 ? Math.round(this.fingerCorrect / minutes) : 0;
+    const acc = this.fingerCorrect + this.fingerErrors > 0
+      ? Math.round((this.fingerCorrect / (this.fingerCorrect + this.fingerErrors)) * 100) : 100;
+
+    const data = await this.api('/api/fingering') || {};
+    const levels = data.levels || {};
+    const existing = levels[String(this.fingerLevel)] || {};
+    const isBetter = !existing.completed || wpm > (existing.bestWPM || 0);
+    levels[String(this.fingerLevel)] = {
+      completed: true,
+      bestWPM: isBetter ? wpm : (existing.bestWPM || wpm),
+      bestAccuracy: isBetter ? acc : Math.max(existing.bestAccuracy || 0, acc),
+      bestTime: isBetter ? elapsed : Math.min(existing.bestTime || elapsed, elapsed),
+    };
+    await this.api('/api/fingering', {
+      method: 'PUT',
+      body: JSON.stringify({ levels, fingerStats: this.fingerStats }),
+    });
+
+    const def = this.fingerLevelDefs.find(l => l.id === this.fingerLevel);
+    const emoji = acc >= 95 ? '🎉' : (acc >= 80 ? '👍' : '💪');
+    alert(`${emoji} ${def.name} 完成！\nWPM: ${wpm}\n正确率: ${acc}%\n用时: ${this.formatTime(elapsed)}\n${isBetter ? '🏆 新纪录！' : ''}`);
+
+    this.fingerLevel = null;
+    document.getElementById('fingerBasicPractice').style.display = 'none';
+    this.fingerLoadLevels();
+    const newData = await this.api('/api/fingering');
+    if (newData && newData.levels) {
+      const completed = Object.values(newData.levels).filter(l => l.completed).length;
+      const el = document.getElementById('wFingerProgress');
+      if (el) el.textContent = completed + '/5';
+    }
+  },
+
+  fingerBasicBack() {
+    document.removeEventListener('keydown', this._fingerKeyHandler);
+    if (this.fingerTimer) clearInterval(this.fingerTimer);
+    this.fingerLevel = null;
+    document.getElementById('fingerBasicPractice').style.display = 'none';
+    this.fingerLoadLevels();
+  },
+
+  fingerBasicRestart() {
+    document.removeEventListener('keydown', this._fingerKeyHandler);
+    if (this.fingerTimer) clearInterval(this.fingerTimer);
+    if (this.fingerLevel) this.fingerStartLevel(this.fingerLevel);
+  },
+
   updateReferenceHighlight() {
     if (!this.activeMaterial) return;
     const chars=[...this.activeMaterial.content];
