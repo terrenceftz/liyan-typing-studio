@@ -543,11 +543,11 @@ input[type="range"]::-moz-range-thumb {
     </div>
   </div>
 
-  <!-- ─── Users View (Admin) ─── -->
+  <!-- Users View (Admin) -->
   <div id="view-users" class="view p-4" style="max-width:1100px; margin:0 auto">
     <!-- Section 1: Progress Monitoring -->
     <div class="card p-6 mb-4">
-      <h2 class="text-lg font-bold mb-4" style="color:var(--lavender-dark)">📊 学员进度监控</h2>
+      <h2 class="section-title mb-4">📊 学员进度监控</h2>
       <div id="adminStatsTable" style="overflow-x:auto">
         <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px">加载中...</div>
       </div>
@@ -555,13 +555,13 @@ input[type="range"]::-moz-range-thumb {
 
     <!-- Section 2: User Account Management -->
     <div class="card p-6">
-      <h2 class="text-lg font-bold mb-4" style="color:var(--lavender-dark)">👥 账号管理</h2>
+      <h2 class="section-title mb-4">👥 账号管理</h2>
       <div class="flex gap-2 mb-4 flex-wrap">
-        <input id="newUsername" class="p-2 rounded-lg border text-sm" style="border-color:var(--lavender-light);outline:none;width:160px" placeholder="账号 (字母/数字)">
-        <input id="newPassword" type="text" class="p-2 rounded-lg border text-sm" style="border-color:var(--lavender-light);outline:none;width:140px" placeholder="密码 (4位以上)">
-        <button class="btn-primary text-sm" onclick="app.addUser()">➕ 添加用户</button>
+        <input id="newUsername" class="input-sm" style="width:160px" placeholder="账号 (字母/数字)">
+        <input id="newPassword" type="text" class="input-sm" style="width:140px" placeholder="密码 (4位以上)">
+        <button class="btn-primary text-sm" onclick="app.addUser()">+ 添加用户</button>
       </div>
-      <div id="userAddError" style="display:none;color:#ef4444;font-size:12px;margin-bottom:8px"></div>
+      <div id="userAddError" style="display:none;color:var(--error);font-size:12px;margin-bottom:8px"></div>
       <div id="userList" class="flex flex-col gap-1"></div>
     </div>
   </div>
