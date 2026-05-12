@@ -1896,6 +1896,23 @@ const app = {
     this.renderKeyboard('fingerParaKeyboard', null);
   },
 
+  async loadFingeringPage() {
+    this._fingerKeyHandler = this._fingerKeyHandler.bind(this);
+    this.fingerMode = 'basic';
+    this.fingerLevel = null;
+    document.getElementById('fingerModeBasic').className = 'nav-link active';
+    document.getElementById('fingerModePara').className = 'nav-link';
+    document.getElementById('fingerBasicPanel').style.display = '';
+    document.getElementById('fingerParaPanel').style.display = 'none';
+    document.getElementById('fingerBasicPractice').style.display = 'none';
+    const data = await this.api('/api/fingering');
+    if (data && data.fingerStats) {
+      this.fingerStats = { ...this.fingerStats, ...data.fingerStats };
+    }
+    this.fingerLoadLevels();
+    this.renderKeyboard('fingerKeyboard', null);
+  },
+
   updateReferenceHighlight() {
     if (!this.activeMaterial) return;
     const chars=[...this.activeMaterial.content];
