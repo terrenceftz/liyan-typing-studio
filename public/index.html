@@ -446,6 +446,7 @@
           <p class="text-xs mt-1" style="color:var(--text-secondary);margin:4px 0 0">远程链接直接引用，无需上传文件</p>
           <div id="audioPreview" style="display:none;margin-top:8px">
             <audio id="matAudioPlayer" controls style="width:100%;max-width:400px"></audio>
+            <textarea id="transcriptInput" class="w-full p-2 rounded-lg border text-xs mt-2" style="border-color:var(--lavender-light);outline:none;min-height:60px;resize:vertical" placeholder="📝 文稿（可选）：输入音频对应的文字内容，练习时将用于正确率比对。留空则不比对。"></textarea>
           </div>
         </div>
 
@@ -958,11 +959,15 @@ const app = {
       // Audio preview for existing material
       const preview = document.getElementById('audioPreview');
       const player = document.getElementById('matAudioPlayer');
+      const transcript = document.getElementById('transcriptInput');
       if (m.audioUrl) {
         player.src = m.audioUrl;
         preview.style.display = '';
+        const isPlaceholder = /^[\(（](音频练习|远程音频练习)[\)）]$/.test(m.content||'');
+        transcript.value = isPlaceholder ? '' : (m.content||'');
       } else {
         preview.style.display = 'none';
+        transcript.value = '';
       }
     } else {
       this.matClear();
@@ -980,6 +985,7 @@ const app = {
     document.getElementById('saveGenBtn').style.display = 'none';
     document.getElementById('uploadStatus').textContent = '';
     document.getElementById('audioUrlInput').value = '';
+    document.getElementById('transcriptInput').value = '';
     document.getElementById('audioPreview').style.display = 'none';
     document.getElementById('matAudioPlayer').src = '';
     document.getElementById('matEditorTitle').textContent = '🆕 新建材料';
@@ -988,10 +994,14 @@ const app = {
 
   async saveMaterial() {
     const title = document.getElementById('matTitle').value.trim();
-    const content = document.getElementById('matContent').value.trim();
+    let content = document.getElementById('matContent').value.trim();
+    const transcript = document.getElementById('transcriptInput').value.trim();
     const hasAudio = !!this._uploadedAudio;
     if (!content && !hasAudio) { this.toast('⚠️','请输入材料内容或上传音频'); return; }
-    const body = { title: title||'未命名材料', content: content||'(音频练习)' };
+    // If audio with transcript, use transcript as content for comparison
+    if (hasAudio && transcript) content = transcript;
+    if (hasAudio && !transcript) content = content || '(音频练习)';
+    const body = { title: title||'未命名材料', content };
     if (hasAudio) {
       body.audioUrl = this._uploadedAudio.url;
       body.audioName = this._uploadedAudio.name;
