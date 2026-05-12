@@ -431,27 +431,27 @@ input[type="range"]::-moz-range-thumb {
         <!-- Quick Stats -->
         <div class="card p-4">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
-            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
-              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wTotalPractices">0</div>
-              <div class="text-xs" style="color:var(--text-secondary)">练习次数</div>
+            <div class="stat-cell">
+              <div class="stat-num" id="wTotalPractices">0</div>
+              <div class="stat-lbl">练习次数</div>
             </div>
-            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
-              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wBestWPM">0</div>
-              <div class="text-xs" style="color:var(--text-secondary)">最佳 WPM</div>
+            <div class="stat-cell">
+              <div class="stat-num" id="wBestWPM">0</div>
+              <div class="stat-lbl">最佳 WPM</div>
             </div>
-            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
-              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wTotalChars">0</div>
-              <div class="text-xs" style="color:var(--text-secondary)">累计字数</div>
+            <div class="stat-cell">
+              <div class="stat-num" id="wTotalChars">0</div>
+              <div class="stat-lbl">累计字数</div>
             </div>
-            <div class="text-center p-2 rounded-lg" style="background:var(--lavender-light)">
-              <div class="text-base font-bold" style="color:var(--lavender-dark)" id="wAvgAccuracy">--</div>
-              <div class="text-xs" style="color:var(--text-secondary)">平均正确率</div>
+            <div class="stat-cell">
+              <div class="stat-num" id="wAvgAccuracy">--</div>
+              <div class="stat-lbl">平均正确率</div>
             </div>
           </div>
         </div>
 
         <!-- CTA -->
-        <button class="btn-cta w-full" onclick="app.navTo('practice')">⚡ 开始练习</button>
+        <button class="btn-cta" onclick="app.navTo('practice')">⚡ 开始练习</button>
       </div>
     </div>
 
