@@ -302,12 +302,19 @@ input[type="range"]::-moz-range-thumb {
 
 /* Stats grid cell */
 .stat-cell {
-  text-align: center; padding: 12px 8px; border-radius: var(--radius);
-  background: var(--soft-bg2); transition: transform 0.2s;
+  text-align: center; padding: 14px 8px 12px; border-radius: var(--radius);
+  background: var(--soft-bg2); transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
 }
-.stat-cell:hover { transform: translateY(-2px); }
-.stat-cell .stat-num { font-size: 24px; font-weight: 700; color: var(--text); }
-.stat-cell .stat-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.stat-cell::before {
+  content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--accent), #fb923c);
+  opacity: 0.6;
+}
+.stat-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.stat-cell .stat-num { font-size: 22px; font-weight: 700; color: var(--text); position: relative; }
+.stat-cell .stat-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
 
 /* Exam timer */
 .timer-warning { color: var(--amber) !important; animation: pulse 1s ease-in-out infinite; }
@@ -389,7 +396,7 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <!-- Row 1: Calendar + Right panel -->
-    <div style="display:flex; gap:16px; flex-wrap:wrap">
+    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:stretch">
       <!-- Calendar (wider) -->
       <div style="flex:1 1 420px; min-width:340px">
         <div class="card p-5">
@@ -408,9 +415,9 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <!-- Right panel -->
-      <div style="flex:0 0 300px; display:flex; flex-direction:column; gap:14px">
+      <div style="flex:0 0 300px; display:flex; flex-direction:column">
         <!-- Progress + Goal merged -->
-        <div class="card p-4">
+        <div class="card p-4" style="flex-shrink:0">
           <h2 class="section-title-sm mb-3">🎯 今日任务</h2>
           <div class="flex justify-between text-sm mb-1">
             <span style="color:var(--text-secondary)">已输入 <b id="wTodayChars" style="color:var(--accent)">0</b> </span>
@@ -429,8 +436,12 @@ input[type="range"]::-moz-range-thumb {
         </div>
 
         <!-- Quick Stats -->
-        <div class="card p-4">
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+        <div class="card p-3" style="flex-shrink:0; margin-top:10px">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+            <span style="font-size:12px; font-weight:700; color:var(--text)">📊 数据概览</span>
+            <span style="flex:1; height:1px; background:linear-gradient(90deg, var(--border), transparent)"></span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px">
             <div class="stat-cell">
               <div class="stat-num" id="wTotalPractices">0</div>
               <div class="stat-lbl">练习次数</div>
@@ -451,28 +462,31 @@ input[type="range"]::-moz-range-thumb {
         </div>
 
         <!-- CTA -->
-        <button class="btn-cta" onclick="app.navTo('practice')">⚡ 开始练习</button>
+        <button class="btn-cta" onclick="app.navTo('practice')" style="flex-shrink:0; margin-top:2px">⚡ 开始练习</button>
+
+        <div style="flex:1"></div>
+
+        <!-- Pet -->
+        <div class="card p-4 text-center" style="flex-shrink:0; margin-top:10px">
+          <h2 class="section-title-sm mb-3">🐾 小妍陪你练</h2>
+          <div class="pet-container" onclick="app.petClick()">
+            <div class="pet-speech" id="petSpeech"></div>
+            <div class="pet-body" id="petBody">🐱</div>
+          </div>
+          <p class="text-xs mt-3" style="color:var(--text-secondary)">点击互动 💕</p>
+        </div>
       </div>
     </div>
 
-    <!-- Row 2: Achievements | Pet | Recent Records -->
+    <!-- Row 2: Achievements | Recent Records -->
     <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px">
       <!-- Achievements -->
-      <div class="card p-4" style="flex:1 1 200px; min-width:180px">
+      <div class="card p-4" style="flex:1 1 280px; min-width:200px">
         <h2 class="section-title-sm mb-3">🏅 成就勋章</h2>
         <div id="wAchievements" class="flex flex-wrap gap-1"></div>
       </div>
-      <!-- Pet -->
-      <div class="card p-4 text-center" style="flex:0 0 180px">
-        <h2 class="section-title-sm mb-2">🐾 小妍陪你练</h2>
-        <div class="pet-container" onclick="app.petClick()">
-          <div class="pet-speech" id="petSpeech"></div>
-          <div class="pet-body" id="petBody">🐱</div>
-        </div>
-        <p class="text-xs mt-2" style="color:var(--text-secondary)">点击互动 💕</p>
-      </div>
       <!-- Recent Records -->
-      <div class="card p-4" style="flex:2 1 300px; min-width:280px">
+      <div class="card p-4" style="flex:2 1 400px; min-width:300px">
         <h2 class="section-title-sm mb-3">📊 最近练习</h2>
         <div id="recentRecords">
           <div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:20px">还没有练习记录<br>快去练习吧！</div>
@@ -532,9 +546,9 @@ input[type="range"]::-moz-range-thumb {
           <p class="text-xs mt-2" style="color:var(--text-secondary)">随机生成法院相关练习材料，可设字数</p>
         </div>
         <textarea id="matContent" class="w-full p-3 rounded-lg border mb-3 text-sm" style="border-color:var(--border); min-height:250px; resize:vertical; outline:none; border-radius:var(--radius); transition:border-color 0.3s" placeholder="在此粘贴考试材料内容..."></textarea>
-        <div class="flex items-center justify-between">
-          <span id="matInfo" class="text-xs" style="color:var(--text-secondary)"></span>
-          <div class="flex gap-2">
+        <div class="flex items-center justify-between gap-3">
+          <span id="matInfo" class="text-xs truncate" style="color:var(--text-secondary);min-width:0"></span>
+          <div class="flex gap-2 flex-shrink-0">
             <button class="btn-ghost btn-ghost-danger text-sm" id="matDeleteBtn" style="display:none" onclick="app.deleteMaterial()">🗑️ 删除</button>
             <button class="btn-primary text-sm" onclick="app.saveMaterial()">💾 保存</button>
           </div>
@@ -1021,7 +1035,8 @@ const app = {
       document.getElementById('matTitle').value = m.title||'';
       document.getElementById('matContent').value = m.content||'';
       const creator = m.createdBy ? ` | 创建者: ${m.createdBy}` : '';
-      const audioInfo = m.audioUrl ? ` | 🎵 音频: ${m.audioName||'已有'}` : '';
+      const audioName = m.audioName ? (m.audioName.length > 25 ? m.audioName.slice(0, 22) + '...' : m.audioName) : '已有';
+      const audioInfo = m.audioUrl ? ` | 🎵 音频: ${audioName}` : '';
       document.getElementById('matInfo').textContent = `字数: ${m.charCount}${creator}${audioInfo} | ${new Date(m.createdAt).toLocaleDateString('zh-CN')}`;
       document.getElementById('matDeleteBtn').style.display = 'inline-flex';
       document.getElementById('matEditorTitle').textContent = '✏️ 编辑材料';
@@ -1279,8 +1294,8 @@ const app = {
       this.examTargetChars = parseInt(document.getElementById('examTargetInput').value) || 2000;
       document.getElementById('timerLabel').textContent = '剩余时间';
       document.getElementById('elapsedDisplay').textContent = this.formatTime(this.examTimeLimit);
-      document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
-      document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+      document.getElementById('elapsedDisplay').className = 'stat-value';
+      document.getElementById('timerCard').className = 'card px-4 py-3 text-center';
       document.getElementById('examStatus').textContent = '';
       if (finishBtn) finishBtn.textContent = '📝 提前交卷';
     } else {
@@ -1289,8 +1304,8 @@ const app = {
       examCfg.style.display = 'none';
       document.getElementById('timerLabel').textContent = '用时';
       document.getElementById('elapsedDisplay').textContent = '00:00';
-      document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
-      document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+      document.getElementById('elapsedDisplay').className = 'stat-value';
+      document.getElementById('timerCard').className = 'card px-4 py-3 text-center';
       document.getElementById('examStatus').textContent = '';
       if (finishBtn) finishBtn.textContent = '🏁 结束练习';
     }
@@ -1380,9 +1395,12 @@ const app = {
     if (!this.activeMaterial) return;
     const chars=[...this.activeMaterial.content];
     const inputChars=[...document.getElementById('typingInput').value];
+    const isPunct = ch => /^[\s\p{P}\p{S}]$/u.test(ch);
     const spans=document.getElementById('referenceDisplay').querySelectorAll('span');
     for (let i=0;i<Math.min(chars.length,spans.length);i++) {
-      if (i<inputChars.length) {
+      if (isPunct(chars[i])) {
+        spans[i].className = i<inputChars.length && inputChars[i]!==chars[i] ? 'char-error' : 'char-correct';
+      } else if (i<inputChars.length) {
         spans[i].className = inputChars[i]===chars[i] ? 'char-correct' : 'char-error';
       } else if (i===inputChars.length) {
         spans[i].className='char-cursor';
@@ -1471,8 +1489,8 @@ const app = {
     document.getElementById('playBtn').textContent='▶️';
     document.getElementById('wpmDisplay').textContent='0';
     document.getElementById('accuracyDisplay').textContent='--';
-    document.getElementById('elapsedDisplay').className = 'stat-value text-xl';
-    document.getElementById('timerCard').className = 'card px-4 py-2 flex-1 min-w-[120px] text-center';
+    document.getElementById('elapsedDisplay').className = 'stat-value';
+    document.getElementById('timerCard').className = 'card px-4 py-3 text-center';
     document.getElementById('examStatus').textContent = '';
     if (this.practiceMode === 'exam') {
       document.getElementById('elapsedDisplay').textContent = this.formatTime(this.examTimeLimit);
@@ -1530,9 +1548,12 @@ const app = {
       return;
     }
     const refChars=[...this.activeMaterial.content];
+    const isPunct = ch => /^[\s\p{P}\p{S}]$/u.test(ch);
     this.correctChars=0; this.incorrectChars=0;
     for (let i=0;i<inputChars.length;i++) {
-      if (i<refChars.length&&inputChars[i]===refChars[i]) this.correctChars++;
+      if (i>=refChars.length) { this.incorrectChars++; continue; }
+      if (isPunct(refChars[i])) continue;
+      if (inputChars[i]===refChars[i]) this.correctChars++;
       else this.incorrectChars++;
     }
     this.updateReferenceHighlight(); this.updateStats();
