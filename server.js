@@ -369,7 +369,7 @@ app.get('/api/stats', requireAuth, (req, res) => {
 
 // ----- Settings API (per-user) -----
 app.get('/api/settings', requireAuth, (req, res) => {
-  const defaults = { speed: 1.0, dailyGoal: 1000, hideReference: false, fontSize: 18 };
+  const defaults = { speed: 1.0, dailyGoal: 1000, hideReference: true, fontSize: 18 };
   const data = readJSON(userFile(req.user.username, 'settings.json')) || {};
   res.json({ ...defaults, ...data });
 });
@@ -379,6 +379,44 @@ app.put('/api/settings', requireAuth, (req, res) => {
   const updated = { ...existing, ...req.body };
   writeJSON(userFile(req.user.username, 'settings.json'), updated);
   res.json({ success: true, settings: updated });
+});
+
+// ----- Fingering Practice API (per-user) -----
+app.get('/api/fingering', requireAuth, (req, res) => {
+  const defaults = {
+    levels: {
+      '1': { completed: false, bestWPM: 0, bestAccuracy: 0, bestTime: 0 },
+      '2': { completed: false, bestWPM: 0, bestAccuracy: 0, bestTime: 0 },
+      '3': { completed: false, bestWPM: 0, bestAccuracy: 0, bestTime: 0 },
+      '4': { completed: false, bestWPM: 0, bestAccuracy: 0, bestTime: 0 },
+      '5': { completed: false, bestWPM: 0, bestAccuracy: 0, bestTime: 0 },
+    },
+    fingerStats: {
+      leftPinky: { hits: 0, errors: 0 },
+      leftRing: { hits: 0, errors: 0 },
+      leftMiddle: { hits: 0, errors: 0 },
+      leftIndex: { hits: 0, errors: 0 },
+      rightIndex: { hits: 0, errors: 0 },
+      rightMiddle: { hits: 0, errors: 0 },
+      rightRing: { hits: 0, errors: 0 },
+      rightPinky: { hits: 0, errors: 0 },
+      thumbs: { hits: 0, errors: 0 },
+    },
+  };
+  const data = readJSON(userFile(req.user.username, 'fingering.json')) || {};
+  res.json({
+    ...defaults,
+    ...data,
+    levels: { ...defaults.levels, ...(data.levels || {}) },
+    fingerStats: { ...defaults.fingerStats, ...(data.fingerStats || {}) },
+  });
+});
+
+app.put('/api/fingering', requireAuth, (req, res) => {
+  const existing = readJSON(userFile(req.user.username, 'fingering.json')) || {};
+  const updated = { ...existing, ...req.body };
+  writeJSON(userFile(req.user.username, 'fingering.json'), updated);
+  res.json({ success: true });
 });
 
 // ----- Calendar API (per-user) -----
